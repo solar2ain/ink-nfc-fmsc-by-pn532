@@ -1,0 +1,26 @@
+name: CLI tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: ['3.11', '3.12', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[test]"
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python -m pip uninstall -y ink-nfc-fmsc-by-pn532
+      - run: python -m pip install --no-index --no-deps --find-links dist ink-nfc-fmsc-by-pn532
+      - run: ink-nfc --version
+      - run: ink-nfc screens --ic JD
+      - run: python -m pytest "${{ github.workspace }}/tests/test_package.py" -q
+        working-directory: ${{ runner.temp }}
+        env:
+          INK_NFC_REPO: ${{ github.workspace }}

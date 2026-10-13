@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "note": "Bundled reference snapshots; SHA256 values identify exact content. Checkout identities are not distributed.",
+  "inputs": [
+    {
+      "name": "panel-reference.json",
+      "sha256": "6c161c3b71bbcfea350181c3384d4cfbb639d687033bc4ffe1c2f40de89e51c7"
+    },
+    {
+      "name": "transport-reference.py",
+      "sha256": "dc27b5813b141e7a58eacecab1f2a077027e7ba2ff3a30a5a455c3e7a20395a5"
+    },
+    {
+      "name": "session-reference.py",
+      "sha256": "f64853ad9ab91943f1ffbfc0779e2727d1776ee846124918d600e654b6dfbe8a"
+    },
+    {
+      "name": "image-reference.py",
+      "sha256": "3562b14205328dd85b63983219b4e164b0405adc9b2c73b0366a5e02f4bf3ae3"
+    }
+  ],
+  "bundled": {
+    "drivers.json": "1083fd401079417c9c4ac818ec1119c9bedf797cdaf9806bd3c80544ff3cd012",
+    "epdoptimize.cjs": "38d820218fb368123e999db353811587b2efe64c5450df564f5cd73d8297f44d",
+    "EPDOPTIMIZE_LICENSE.txt": "10c41f434da491e8ef9dace5f9187bb71c03fb7061acd0de85aeffc318dd21e7",
+    "legacyDithering.js": "fefcbd8ba5d725726cbdac337585d9e6016e2047be03dfa40a139b12b807b034",
+    "two-pass.json": "05ce228b55f8d79b42df00ba1e924ae4a011b31813a62e6d28fa3cce7e560675"
+  }
+}

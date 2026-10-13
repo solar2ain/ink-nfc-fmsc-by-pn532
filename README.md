@@ -1,0 +1,153 @@
+# Ink NFC FMSC by PN532
+
+[中文](README.md) | [English](README.en.md)
+
+## 项目介绍
+
+本工具支持**墨有引力华为Nova彩显手机壳NFC驱动板**，以及其他采用兼容协议的 **FMSC 无源墨水屏 NFC 驱动板**（如 iPhone 等墨水屏手机壳）。通过 PN532 或 PCR532 串口读写器，可选择屏幕驱动、处理图片，并进行传图刷新、清白和重刷。
+
+支持 Windows、macOS 和 Linux，要求 Python 3.11 或更新版本。
+
+## 使用限制
+
+**NFC 供电能力可能不足，导致分辨率较大的屏幕无法完成刷新。** 读写器、天线位置、线圈匹配、驱动板储能和屏幕负载共同影响结果。能找到驱动板或成功传完图片，并不代表能够持续供电；延长等待时间、压缩图片或分段刷新也不保证解决供电问题。
+
+**目前 PN532 的供能能力不足以稳定驱动华为 A0、A1 墨水屏，刷新启动后会出现低电压失联现象。** 部分其他主控的屏幕已能够驱动，但仍需核对具体型号、接线及供电条件。A0/A1 驱动配方已适配，不代表 PN532 能够完成其刷新；单独出现 `RF_TIMEOUT` 也不能直接证明芯片掉电。
+
+> [!CAUTION]
+> **更换屏幕并写入对应驱动配置，会覆盖驱动板原厂的屏幕配置和驱动流程，当前工具无法还原，原厂信息可能无法找回。** 传图或清白时指定 `--screen` 或自定义配方，即会写入所选配置；请在操作前确认能够接受这一风险。
+
+驱动板还受图片存储容量限制，压缩不会增加解压后的存储空间。A0/A1 的分段刷新属于实验功能，不保证另一段画面保持不变。屏幕型号不能自动识别，必须确认主控、分辨率、颜色和接线。列入屏幕目录不代表所有读写器、驱动板和屏幕组合均可完成刷新。
+
+## 实测范围
+
+使用 **PCR532** 读写器，以下驱动板与已测试屏幕的组合能够完成刷新：
+
+| 驱动板 | 已实测可驱动的屏幕范围 |
+|---|---|
+| 华为Nova墨水屏手机壳NFC驱动板 | 400×300 分辨率及以下的已测试屏幕 |
+| FMSC墨水屏NFC驱动板（iPhone 墨水屏外壳） | 2.13 英寸及以下的已测试屏幕 |
+
+![墨水屏外壳驱动板对照：左侧为华为Nova 14 Pro，中间和右侧为iPhone墨水屏外壳驱动板](assets/hardware/driver-boards-annotated.png)
+
+照片从左到右：华为Nova 14 Pro 墨水外壳屏驱动板，以及两种 iPhone 墨水屏外壳驱动板。
+
+以上为当前读写器、驱动板、线圈和屏幕组合的实测结果，不是所有同尺寸、同分辨率型号的兼容性保证。更大屏幕尚不能稳定完成刷新；屏幕面积、颜色、驱动波形及供电条件同样影响结果。
+
+## 安装与连接
+
+```sh
+python -m pip install .
+```
+
+也可使用 `python -m pip install 安装包.whl` 安装。建议使用独立的 Python 虚拟环境。下文采用 `python -m ink_nfc_fmsc`，安装后也可使用 `ink-nfc-fmsc` 或 `ink-nfc`。
+
+连接读写器并接好屏幕，将驱动板线圈固定在读写器感应区。刷新期间不要移动线圈或拔插屏幕排线。这里只支持兼容 PN532 协议的 UART 串口接口，不支持 PC/SC 读卡器、SPI 或 I2C 直连。
+
+```sh
+python -m ink_nfc_fmsc ports
+python -m ink_nfc_fmsc probe --port COM18
+```
+
+Windows 使用 `COM18`，macOS 通常使用 `/dev/cu.usbserial-...`，Linux 通常使用 `/dev/ttyUSB0` 或 `/dev/ttyACM0`。实际串口名称以 `ports` 输出为准。Linux 用户需要串口访问权限。
+
+## 选择屏幕
+
+```sh
+python -m ink_nfc_fmsc screens
+python -m ink_nfc_fmsc screens --ic SSD1683
+```
+
+屏幕统一命名为 **主控-分辨率-颜色**，大小写不敏感。仅华为 A0/A1 使用变体后缀。列表包含屏幕、别名和状态三列；没有别名时留空，暂不可用的屏幕不列出。
+
+别名仅保留 `huawei-a0`、`huawei-a1`、`osptek-e6-154`、`osptek-e6-169`、`osptek-e6-370`；其他屏幕请使用完整规范名称。
+
+| 屏幕 | 型号参数 |
+|---|---|
+| SSD1683 黑白红 | `SSD1683-400x300-BWR` |
+| 华为 A0 | `JD79665AA-552x768-BWRY-A0`，别名 `huawei-a0` |
+| 华为 A1 | `JD79665AA-552x768-BWRY-A1`，别名 `huawei-a1` |
+| SSD1675 黑白 | `SSD1675-152x152-BW` |
+| SSD1619 黑白红 | `SSD1619-128x250-BWR` |
+| JD79668AA 四色 | `JD79668AA-400x300-BWRY` |
+| Osptek 1.54 E6 | `IST7513-240x240-E6`，别名 `osptek-e6-154` |
+
+颜色代码为 `BW`（黑白）、`BWR`（黑白红）、`BWRY`（黑白黄红）、`GRAY4`（四级灰度）、`E6`（六色）。不能仅修改分辨率来适配未知屏幕。
+
+## 传图、清白和重刷
+
+```sh
+python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COM18
+python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COM18
+python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COM18
+python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COM18
+```
+
+`send` 传图后刷新；`send-test` 根据屏幕分辨率和颜色生成色块与底部棋盘格测试图，传图后刷新，无需图片文件；`clear` 写入全白图片后刷新，不是恢复出厂；`refresh` 仅重刷驱动板已经保存的图片，不传新图片或改写驱动。`send-test` 与 `send` 使用相同的配置确认、压缩传输和分段刷新规则。
+
+测试图默认采用横屏布局，竖屏型号也按横屏观看方向排版，再自动旋转为屏幕原生像素格式；不会改变驱动配置中的分辨率。
+
+> [!CAUTION]
+> 传图或清白时指定 `--screen`（或自定义配方）将覆盖驱动板的原厂屏幕配置，当前工具无法还原原厂驱动。执行前会显示风险确认，请核对屏幕型号和接线。
+
+默认执行前要求手动确认。自动化运行时可添加 `--yes` 跳过确认；它不会降低风险，也不是 PIN 或压缩开关。
+
+不指定 `--screen` 或自定义配方时，传图和清白保留已存驱动，不写 DB/DA。实际连接的屏幕必须与板内配置一致。程序先读取配置；若无法唯一确定图像格式，将停止，可用 `--ic`、`--resolution`、`--color` 缩小范围。D1 无法区分某些同尺寸型号及 A0/A1，不能据此自动判断实体屏幕。
+
+```sh
+python -m ink_nfc_fmsc send picture.png --port COM18 --ic SSD1683
+python -m ink_nfc_fmsc clear --port COM18 --ic SSD1683
+```
+
+默认使用 D3 + LZO 压缩传图；添加 `--no-compress` 使用 D2 原始传输。读写器默认自动兼容 PN532/PCR532，无需指定型号。
+
+驱动板默认自动寻卡。华为Nova墨水屏手机壳NFC驱动板采用特殊唤醒，必要时自动验证一次已知 PIN；标准唤醒的 FMSC墨水屏NFC驱动板不发送 PIN。需要限制类型时才指定 `--board huawei` 或兼容参数 `--board iphone`。
+
+## 调整与预览图片
+
+```sh
+python -m ink_nfc_fmsc prepare picture.png --screen SSD1683-400x300-BWR --output output/preview
+python -m ink_nfc_fmsc algorithms
+```
+
+`prepare` 只生成电脑上的预览，不连接读写器。
+
+| 参数 | 用途 |
+|---|---|
+| `--rotation 90` | 顺时针旋转；还可选 0、180、270 |
+| `--fit stretch` | 拉伸铺满；默认居中裁剪 |
+| `--algorithm atkinson` | 选择抖动算法 |
+| `--preset vivid` | 选择鲜艳预设；默认均衡 |
+| `--contrast 1.2` | 调整对比度 |
+| `--mirror-x` | 左右镜像 |
+
+更多设置参见[进阶使用](docs/advanced-use.md)。测试图片说明见 [assets](assets/README.md)。
+
+## 状态与故障
+
+终端日志包含时间、阶段和等级：`INFO` 蓝色、`SUCCESS` 绿色、`WARN` 黄色、`ERROR` 红色。文件日志为纯文本；重定向输出或设置 `NO_COLOR=1` 时不使用颜色。
+
+| 返回值 | 含义 |
+|---|---|
+| `SW=9000` | 当前命令被接受 |
+| `DE=01` / `DE=00` | 驱动板报告忙 / 空闲 |
+| `68CA` / `698A` | 驱动板报告低电压 |
+| `68CB` | 驱动板报告刷新超时 |
+| `RF_TIMEOUT` | 未收到有效回包，不能仅据此认定掉电 |
+| `6985` | 使用条件未满足，可能需要认证 |
+| `6451` | 配置相关错误；应核对屏幕配方及详细日志 |
+
+失败后程序停止，不自动重复认证、写入或刷新。按 Ctrl+C 可取消，程序会尝试关闭射频场并释放串口。刷新等待期间不主动关闭射频场。
+
+已观察到忙状态后，连续收到 3 次 `DE=00` 即结束等待，不再等待固定最短时长；若始终未观察到忙状态，仍保留最低观察时间并提示无法确认。**驱动板报告空闲仍需确认画面是否完整。**
+
+每次操作生成 `run.log`、`summary.json`，传图（包括 `send-test`）时另有 `preview.png`。反馈问题时请提供日志目录和实际屏幕表现。
+
+六色屏必须独立处理第 16 脚，不能默认将第 15、16 脚同时接到 3.3V；核对接线后才添加 `--confirm-e6-wiring`。
+
+[故障排查](docs/troubleshooting.md) · [协议与兼容性](docs/protocol.md) · [组件与许可](docs/sources.md)
+
+
+## Licence
+
+代码采用 [GNU GPLv3 或更新版本](LICENSE)。第三方组件和测试图片适用各自的许可条件。

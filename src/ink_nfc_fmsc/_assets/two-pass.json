@@ -1,0 +1,136 @@
+{
+  "huawei_a0_jd79665": {
+    "schema": 1,
+    "expected_uid": "CAA3D5D3",
+    "panel_profile": "huawei_a0_jd79665",
+    "experimental": true,
+    "full_raw_bytes": 105984,
+    "half_raw_bytes": 52992,
+    "db_clear": "F0DB020000",
+    "da_apdu": "F0DA000003F0C720",
+    "da_scan_apdu": "F0DA010103120030",
+    "expected_d1_a0": "F0C72003000228",
+    "expected_d1_a1": "01120030FFFFFF",
+    "d4_async": "F0D4858000",
+    "refresh_timeout_seconds": 90,
+    "minimum_observation_seconds": 20,
+    "passes": [
+      {
+        "half": 0,
+        "source_x": [
+          0,
+          383
+        ],
+        "gate_y": [
+          0,
+          551
+        ],
+        "raw_bytes": 52992,
+        "d3_blocks": 27,
+        "last_block_bytes": 992,
+        "slot": 0,
+        "db_apdu": "F0DB000066A006C72003000228AA015AA4010CA5020032A40108A5020032A4010CA5020032A40103A102000BA1056103000228A10104A40102A40103A10A830000017F0000022701A30110A20A830000017F0000022701A2021201A40102A40103A2020200A40102A40103",
+        "db_sha256": "92b3e66df95799959a515d9095188fe26a4bb88cf1dc5271d4777081ef7c634f",
+        "spi_window": "830000017F0000022701"
+      },
+      {
+        "half": 1,
+        "source_x": [
+          384,
+          767
+        ],
+        "gate_y": [
+          0,
+          551
+        ],
+        "raw_bytes": 52992,
+        "d3_blocks": 27,
+        "last_block_bytes": 992,
+        "slot": 0,
+        "db_apdu": "F0DB000066A006C72003000228AA015AA4010CA5020032A40108A5020032A4010CA5020032A40103A102000BA1056103000228A10104A40102A40103A10A83018002FF0000022701A30110A20A83018002FF0000022701A2021201A40102A40103A2020200A40102A40103",
+        "db_sha256": "fd24fc60abe78742a558eabffaea3ea7fe3bfe3cd2aad49cb0bb5232d405ee2f",
+        "spi_window": "83018002FF0000022701"
+      }
+    ],
+    "limitations": [
+      "Reuse slot 0; no increase in FMSC image capacity.",
+      "Reset/init/PON/RAM/DRF/POF occur within each D4, not separate DC calls.",
+      "Source-X split corresponds to top/bottom of the current portrait preview.",
+      "JD partial mode still scans gates outside the window; optical retention is unqualified.",
+      "Replaces unreadable DB/DA; leaves the last half-frame geometry in storage.",
+      "DE busy-to-idle does not prove voltage, RAM contents, or optical success.",
+      "No retry, guessed PIN, fallback, white fill, OTP or MTP programming.",
+      "A0 PSR=0B and DRF=01, not the A1 initialization or DRF=00.",
+      "Half-window optical behavior and outside-window retention are not qualified.",
+      "D4 executes PON/RAM/DRF/POF internally; host errors do not locate the internal phase."
+    ],
+    "source": "A0 native panel-reference reference; experimental half-source windows",
+    "row_mapping": "a0_controller_even_odd_before_source_split",
+    "drf": "1201",
+    "native_tres": "03000228"
+  },
+  "huawei_a1_jd79665": {
+    "schema": 1,
+    "expected_uid": "CAA3D5D3",
+    "panel_profile": "huawei_a1_jd79665",
+    "experimental": true,
+    "full_raw_bytes": 105984,
+    "half_raw_bytes": 52992,
+    "db_clear": "F0DB020000",
+    "da_apdu": "F0DA000003F0C720",
+    "da_scan_apdu": "F0DA010103120030",
+    "expected_d1_a0": "F0C72003000228",
+    "expected_d1_a1": "01120030FFFFFF",
+    "d4_async": "F0D4858000",
+    "refresh_timeout_seconds": 120,
+    "minimum_observation_seconds": 20,
+    "passes": [
+      {
+        "half": 0,
+        "source_x": [
+          0,
+          383
+        ],
+        "gate_y": [
+          0,
+          551
+        ],
+        "raw_bytes": 52992,
+        "d3_blocks": 27,
+        "last_block_bytes": 992,
+        "slot": 0,
+        "db_apdu": "F0DB0000C1A006C72003000228AA0178A4010CA5020014A40108A5020002A4010CA5020014A40103A107AA495520080918A102013FA103004B69A10505401F1F2CA105086F1F1F22A105066F1F1414A1050300540044A103600200A1023008A102503FA1056103000228A1056510002000A102E32FA1028401A10A830000017F0000022701A10104A502000AA40103A10A830000017F0000022701A30110A20A830000017F0000022701A40103A2021200A40102A502000AA40103A2020200A502000AA40103",
+        "db_sha256": "38a60ae454c1c9d5c21237ab7ebf064d5339f3418347d7a80337d063e7f76954",
+        "spi_window": "830000017F0000022701"
+      },
+      {
+        "half": 1,
+        "source_x": [
+          384,
+          767
+        ],
+        "gate_y": [
+          0,
+          551
+        ],
+        "raw_bytes": 52992,
+        "d3_blocks": 27,
+        "last_block_bytes": 992,
+        "slot": 0,
+        "db_apdu": "F0DB0000C1A006C72003000228AA0178A4010CA5020014A40108A5020002A4010CA5020014A40103A107AA495520080918A102013FA103004B69A10505401F1F2CA105086F1F1F22A105066F1F1414A1050300540044A103600200A1023008A102503FA1056103000228A1056510002000A102E32FA1028401A10A83018002FF0000022701A10104A502000AA40103A10A83018002FF0000022701A30110A20A83018002FF0000022701A40103A2021200A40102A502000AA40103A2020200A502000AA40103",
+        "db_sha256": "755e4dfba41a2876768db985faf58e7059b0f8dba9caf98f98ff5cb6ba095991",
+        "spi_window": "83018002FF0000022701"
+      }
+    ],
+    "limitations": [
+      "Reuse slot 0; no increase in FMSC image capacity.",
+      "Reset/init/PON/RAM/DRF/POF occur within each D4, not separate DC calls.",
+      "Source-X split corresponds to top/bottom of the current portrait preview.",
+      "JD partial mode still scans gates outside the window; optical retention is unqualified.",
+      "Replaces unreadable DB/DA; leaves the last half-frame geometry in storage.",
+      "DE busy-to-idle does not prove voltage, RAM contents, or optical success.",
+      "No retry, guessed PIN, fallback, white fill, OTP or MTP programming."
+    ],
+    "source": "JD79665AA V1.0.0 section 8.2.24 (83h); panel-reference A1 vendor init"
+  }
+}

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ink-nfc-fmsc-by-pn532"
+version = "0.1.18"
+description = "Cross-platform FMSC e-paper CLI for PN532 and PCR532 UART readers"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+dependencies = ["colorama>=0.4.6,<1", "pyserial>=3.5,<4", "Pillow>=10,<13", "lzokay>=2.1,<3", "mini-racer>=0.12.4,<1"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "build>=1,<2"]
+
+[project.scripts]
+ink-nfc = "ink_nfc_fmsc.cli:main"
+ink-nfc-fmsc = "ink_nfc_fmsc.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ink_nfc_fmsc._assets" = ["*.json", "*.js", "*.cjs", "*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

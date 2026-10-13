@@ -1,0 +1,8 @@
+include .gitattributes README.en.md
+include LICENSE
+exclude AGENTS.md
+recursive-include docs *.md
+recursive-include assets *.png *.jpg *.jpeg *.bmp *.md *.json
+recursive-exclude assets/gooddisplay *
+include assets/gooddisplay/*.bmp
+recursive-include tests/fixtures *.json
