@@ -148,6 +148,15 @@ For six-color panels, handle pin 16 independently. Do not assume pins 15 and 16 
 [Troubleshooting](docs/troubleshooting.en.md) · [Protocol and compatibility](docs/protocol.en.md) · [Components and licensing](docs/sources.en.md)
 
 
+## Disclaimer
+
+This tool is provided "as is", without any guarantee that it is suitable for a particular device or purpose.
+
+> [!CAUTION]
+> **Changing panels and writing the corresponding configuration overwrites the board's factory panel settings and refresh sequence. This tool cannot restore them, and the original data may be permanently lost.** Proceed with caution and verify the panel model, wiring and power conditions before operation. Do not proceed if you cannot accept these risks.
+
+Use of this tool and any hardware modifications are at the user's own risk. To the extent permitted by applicable law, the authors and contributors are not liable for data loss, equipment damage, refresh failures or other losses arising from use of this tool.
+
 ## Licence
 
 Code is licensed under [GNU GPLv3 or any later version](LICENSE). Third-party components and test images retain their own license terms.
