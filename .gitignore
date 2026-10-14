@@ -11,3 +11,4 @@ logs/
 AGENTS.md
 assets/gooddisplay/*
 !assets/gooddisplay/*.bmp
+!assets/gooddisplay/*.png

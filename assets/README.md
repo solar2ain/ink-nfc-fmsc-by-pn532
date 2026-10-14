@@ -2,7 +2,7 @@
 
 [中文](README.md) | [English](README.en.md)
 
-`examples/` 包含可直接使用的示例图。`gooddisplay/` 仅包含 16 张原厂 BMP 示例图，不含子目录或其他格式的图片。
+`examples/` 包含可直接使用的示例图。`gooddisplay/` 包含 30 张原厂示例图（16 张 BMP、14 张 PNG），全部位于外层目录。
 
 传图前请通过 `prepare` 检查缩放、颜色和方向。图片尺寸与屏幕不一致时，默认会居中裁剪；需要完整保留画面比例时，应先制作对应尺寸的图片。
 

@@ -5,4 +5,5 @@ recursive-include docs *.md
 recursive-include assets *.png *.jpg *.jpeg *.bmp *.md *.json
 recursive-exclude assets/gooddisplay *
 include assets/gooddisplay/*.bmp
+include assets/gooddisplay/*.png
 recursive-include tests/fixtures *.json

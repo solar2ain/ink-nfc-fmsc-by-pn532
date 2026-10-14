@@ -2,7 +2,7 @@
 
 [中文](README.md) | [English](README.en.md)
 
-`examples/` contains ready-to-use sample images. `gooddisplay/` contains only 16 original BMP samples, with no subdirectories or other image formats.
+`examples/` contains ready-to-use sample images. `gooddisplay/` contains 30 original samples (16 BMP and 14 PNG), all in the top-level directory.
 
 Use `prepare` to inspect scale, colors and orientation before upload. Mismatched dimensions are center-cropped by default. Prepare a correctly sized image when its complete composition must be preserved.
 

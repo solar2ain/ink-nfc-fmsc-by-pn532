@@ -8,10 +8,10 @@ from PIL import Image
 def test_vendor_images_match_manifest():
     directory = Path(__file__).parents[1] / "assets" / "gooddisplay"
     manifest = json.loads((directory.parent / "gooddisplay-manifest.json").read_text(encoding="utf-8"))
-    assert len(manifest["images"]) == 16
+    assert len(manifest["images"]) == 30
     assert manifest["directory"] == "gooddisplay"
     assert all(entry["kind"] == "sample" for entry in manifest["images"])
-    assert {p.name for p in directory.glob("*.bmp")} == {
+    assert {p.name for p in directory.iterdir() if p.suffix in {".bmp", ".png"}} == {
         entry["file"] for entry in manifest["images"]}
     assert manifest["source_page"].startswith("https://www.good-display.com/")
     sources = {entry["id"] for entry in manifest["sources"]}
@@ -20,7 +20,7 @@ def test_vendor_images_match_manifest():
     for entry in manifest["images"]:
         path = directory / entry["file"]
         assert path.resolve().is_relative_to(directory.resolve())
-        assert path.parent == directory and path.suffix == ".bmp"
+        assert path.parent == directory and path.suffix in {".bmp", ".png"}
         assert entry["source_id"] in sources
         assert hashlib.sha256(path.read_bytes()).hexdigest() == entry["sha256"]
         with Image.open(path) as image:
