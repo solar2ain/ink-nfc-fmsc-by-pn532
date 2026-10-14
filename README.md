@@ -79,11 +79,22 @@ python -m ink_nfc_fmsc screens --ic SSD1683
 ```sh
 python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc send-color red --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COMxx
 ```
 
-`send` 传图后刷新；`send-test` 根据屏幕分辨率和颜色生成色块与底部棋盘格测试图，传图后刷新，无需图片文件；`clear` 写入全白图片后刷新，不是恢复出厂；`refresh` 仅重刷驱动板已经保存的图片，不传新图片或改写驱动。`send-test` 与 `send` 使用相同的配置确认、压缩传输和分段刷新规则。
+`send` 传图后刷新；`send-test` 根据屏幕分辨率和颜色生成色块与底部棋盘格测试图，传图后刷新，无需图片文件；`send-color` 将屏幕刷为指定单色，无需图片文件；`clear` 写入全白图片后刷新，不是恢复出厂；`refresh` 仅重刷驱动板已经保存的图片，不传新图片或改写驱动。`send-test`、`send-color` 与 `send` 使用相同的配置确认、压缩传输和分段刷新规则。
+
+`send-color` 的颜色名称不区分大小写，与用于筛选屏幕类型的 `--color BWR` 等参数不同。单色直接使用屏幕原生色码，不经过抖动或照片处理；不支持的颜色会在写入前报错。`send-color white` 与 `clear` 的全白数据相同。
+
+| 颜色名称 | 全屏颜色 | 支持的屏幕颜色类型 |
+|---|---|---|
+| `black`、`white` | 黑、白 | 全部 |
+| `red` | 红 | BWR、BWRY、E6 |
+| `yellow` | 黄 | BWRY、E6 |
+| `green`、`blue` | 绿、蓝 | E6 |
+| `dark-gray`、`light-gray` | 深灰、浅灰 | GRAY4 |
 
 测试图默认采用横屏布局，竖屏型号也按横屏观看方向排版，再自动旋转为屏幕原生像素格式；不会改变驱动配置中的分辨率。
 
@@ -141,7 +152,7 @@ python -m ink_nfc_fmsc algorithms
 
 已观察到忙状态后，连续收到 3 次 `DE=00` 即结束等待，不再等待固定最短时长；若始终未观察到忙状态，仍保留最低观察时间并提示无法确认。**驱动板报告空闲仍需确认画面是否完整。**
 
-每次操作生成 `run.log`、`summary.json`，传图（包括 `send-test`）时另有 `preview.png`。反馈问题时请提供日志目录和实际屏幕表现。
+每次操作生成 `run.log`、`summary.json`，传图（包括 `send-test`、`send-color`）时另有 `preview.png`。反馈问题时请提供日志目录和实际屏幕表现。
 
 六色屏必须独立处理第 16 脚，不能默认将第 15、16 脚同时接到 3.3V；核对接线后才添加 `--confirm-e6-wiring`。
 

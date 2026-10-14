@@ -79,11 +79,22 @@ Color codes are `BW`, `BWR`, `BWRY`, `GRAY4` and `E6`. Changing dimensions alone
 ```sh
 python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc send-color red --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COMxx
 python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COMxx
 ```
 
-`send` uploads and refreshes; `send-test` generates color blocks and a bottom checkerboard for the selected panel's resolution and colors, then uploads and refreshes without an image file; `clear` uploads a white image and refreshes, not a factory reset; `refresh` uses the stored image without uploading or changing the driver. `send-test` follows the same configuration confirmation, compression and segmented-refresh rules as `send`.
+`send` uploads and refreshes; `send-test` generates color blocks and a bottom checkerboard for the selected panel's resolution and colors, then uploads and refreshes without an image file; `send-color` fills the panel with a specified solid color without an image file; `clear` uploads a white image and refreshes, not a factory reset; `refresh` uses the stored image without uploading or changing the driver. `send-test` and `send-color` follow the same configuration confirmation, compression and segmented-refresh rules as `send`.
+
+`send-color` color names are case-insensitive and separate from panel filters such as `--color BWR`. Solid fills use native panel codes without dithering or photographic processing; unsupported colors are rejected before writes. `send-color white` produces the same white image data as `clear`.
+
+| Color name | Full-panel color | Supported panel color types |
+|---|---|---|
+| `black`, `white` | Black, white | All |
+| `red` | Red | BWR, BWRY, E6 |
+| `yellow` | Yellow | BWRY, E6 |
+| `green`, `blue` | Green, blue | E6 |
+| `dark-gray`, `light-gray` | Dark gray, light gray | GRAY4 |
 
 Test patterns use a landscape layout by default, including portrait panel models. The pattern is automatically rotated into the native pixel format without changing the resolution in the driver configuration.
 
@@ -141,7 +152,7 @@ Failures stop the operation without automatic authentication, write or refresh r
 
 After observing BUSY, three consecutive `DE=00` responses finish the wait without a fixed minimum duration. If BUSY was never observed, the minimum observation duration remains and the tool reports uncertainty. **An idle response still requires visual confirmation of the complete image.**
 
-Operations create `run.log`, `summary.json`, and `preview.png` for uploads (including `send-test`). Include the log directory and actual panel behavior in a problem report.
+Operations create `run.log`, `summary.json`, and `preview.png` for uploads (including `send-test` and `send-color`). Include the log directory and actual panel behavior in a problem report.
 
 For six-color panels, handle pin 16 independently. Do not assume pins 15 and 16 both connect to 3.3 V; add `--confirm-e6-wiring` only after verifying the wiring.
 

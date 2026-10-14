@@ -11,11 +11,13 @@ from ink_nfc_fmsc.protocol import D1
 from test_device import Clock, FakeReader, FakeSession
 
 
-@pytest.mark.parametrize("operation", ["send", "send-test", "clear", "refresh"])
+@pytest.mark.parametrize("operation", ["send", "send-test", "send-color", "clear", "refresh"])
 def test_yes_only_skips_the_prompt(operation, capsys):
     argv = [operation, "--screen", "huawei-a0", "--yes"]
     if operation == "send":
         argv.insert(1, "picture.png")
+    elif operation == "send-color":
+        argv.insert(1, "red")
     with patch("builtins.input") as prompt:
         assert confirm_operation(parse_args(argv), select_screen("huawei-a0"), Console())
         prompt.assert_not_called()
@@ -46,9 +48,11 @@ def test_keep_driver_still_requires_refresh_confirmation_without_overwrite_warni
     assert "原厂" not in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("operation", ["send", "send-test", "clear", "refresh"])
+@pytest.mark.parametrize("operation", ["send", "send-test", "send-color", "clear", "refresh"])
 def test_no_screen_preserves_driver_and_removed_switch_is_not_public(operation):
     argv = [operation] + (["image.png"] if operation == "send" else [])
+    if operation == "send-color":
+        argv.insert(1, "red")
     assert parse_args(argv).keep_driver
     assert parse_args(argv + ["--screen", "huawei-a0"]).keep_driver == (operation == "refresh")
     with pytest.raises(SystemExit):
@@ -142,11 +146,13 @@ def test_custom_profile_requires_replacement_confirmation():
     assert parse_args(["refresh", "--profile-file", "profile.json"]).keep_driver
 
 
-@pytest.mark.parametrize("operation", ["send", "send-test", "clear", "refresh"])
+@pytest.mark.parametrize("operation", ["send", "send-test", "send-color", "clear", "refresh"])
 @pytest.mark.parametrize("port_count", [0, 4])
 @pytest.mark.parametrize("skip_prompt", [False, True])
 def test_missing_port_stops_before_confirmation(operation, port_count, skip_prompt, capsys):
     argv = [operation] + (["picture.png"] if operation == "send" else [])
+    if operation == "send-color":
+        argv.insert(1, "red")
     argv += ["--screen", "huawei-a0"] + (["--yes"] if skip_prompt else [])
     ports = [SimpleNamespace(device=f"COM{i}") for i in range(port_count)]
     with patch("ink_nfc_fmsc.cli.list_ports.comports", return_value=ports) as enumerate_ports, \

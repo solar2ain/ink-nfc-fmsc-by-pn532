@@ -19,6 +19,7 @@ def test_help_labels_send_clear_and_keeps_refresh():
     assert "refresh" in help_text and "\u91cd\u5237" in help_text
     assert "flash" not in help_text
     assert "send-test" in help_text
+    assert "send-color" in help_text
 
 
 @pytest.mark.parametrize("color", ["BW", "BwR", "BWRY", "GrAy4", "E6"])
@@ -128,11 +129,13 @@ def test_default_de_is_9hz_and_product_interface_has_no_blind_debug_commands():
         parser().parse_args(["blind-scan"])
 
 
-@pytest.mark.parametrize("operation", ["send", "send-test", "clear", "prepare"])
+@pytest.mark.parametrize("operation", ["send", "send-test", "send-color", "clear", "prepare"])
 def test_compressed_default_and_explicit_uncompressed_option(operation):
     argv = [operation, "--screen", "SSD1683-400x300-BWR"]
     if operation == "send":
         argv.insert(1, "picture.png")
+    elif operation == "send-color":
+        argv.insert(1, "red")
     elif operation == "prepare":
         argv += ["--white", "--output", "output/preview"]
     args = parse_args(argv)

@@ -8,12 +8,23 @@ from .image_processing import ImageProcessOptions, compose_image, process_frame
 
 BLACK, WHITE, RED, YELLOW = (0, 0, 0), (255, 255, 255), (220, 48, 38), (235, 194, 25)
 GREEN, BLUE = (19, 116, 99), (44, 97, 165)
+SOLID_COLORS = {"black": BLACK, "white": WHITE, "red": RED, "yellow": YELLOW,
+                "green": GREEN, "blue": BLUE, "dark-gray": (85, 85, 85), "light-gray": (170, 170, 170)}
 
 
 def palette(screen):
     return {"bw": [BLACK, WHITE], "bwr": [BLACK, WHITE, RED],
             "bwry": [BLACK, WHITE, YELLOW, RED], "e6": [BLACK, WHITE, RED, YELLOW, GREEN, BLUE],
             "gray4": [BLACK, (85, 85, 85), (170, 170, 170), WHITE]}[screen.color]
+
+
+def solid_color(screen, name):
+    colors = palette(screen)
+    rgb = SOLID_COLORS.get(name.casefold())
+    if rgb not in colors:
+        supported = ", ".join(key for key, value in SOLID_COLORS.items() if value in colors)
+        raise ValueError(f"屏幕 {screen.name} 不支持单色 {name}；可用颜色：{supported}。")
+    return rgb
 
 
 def test_pattern(screen):
@@ -100,17 +111,19 @@ def pack_indices(indices, screen):
     return result
 
 
-def prepare_image(screen, image=None, *, white=False, rotation="auto", fit="crop",
+def prepare_image(screen, image=None, *, white=False, fill_color=None, rotation="auto", fit="crop",
                   scale=1.0, pan_x=0.0, pan_y=0.0, mirror_x=False, mirror_y=False,
                   options=None, native_palette=False):
     screen.require_supported()
     p = screen.value
     x, y, w, h = screen.visible
     colors = palette(screen)
-    white_index = len(colors) - 1 if screen.color == "gray4" else 1
-    if white:
-        indices = bytes([white_index]) * (p["width"] * p["height"])
-        preview = Image.new("RGB", (p["width"], p["height"]), WHITE)
+    if white and fill_color is not None:
+        raise ValueError("Use white OR fill_color, not both")
+    if white or fill_color is not None:
+        rgb = WHITE if white else solid_color(screen, fill_color)
+        indices = bytes([colors.index(rgb)]) * (p["width"] * p["height"])
+        preview = Image.new("RGB", (p["width"], p["height"]), rgb)
     else:
         if image is None:
             raise ValueError("An image path is required; use clear for white")

@@ -13,7 +13,7 @@ from .catalog import asset_json, screens, select_screen
 from .console import Console, configure_output, format_message
 from .device import BOARD_NAMES, Device, RunLog, Settings
 from .image_processing import IMAGE_ALGORITHMS, PROCESSING_PRESETS, ImageProcessOptions
-from .images import prepare_image, test_pattern
+from .images import SOLID_COLORS, prepare_image, solid_color, test_pattern
 from .plans import jobs_for
 from .protocol import D8
 from .user_messages import failure_description, stage_label
@@ -47,7 +47,7 @@ def screen_options(parser):
 
 
 def hardware_options(parser):
-    parser.add_argument("--port", help="读写器串口，如 COM18（大小写不敏感）、/dev/cu.usbserial-...、/dev/ttyUSB0")
+    parser.add_argument("--port", help="读写器实际串口名称，如 COM3、/dev/cu.usbserial-...、/dev/ttyUSB0")
     parser.add_argument("--board", choices=("auto", "huawei", "iphone"), default="auto",
                         help=f"默认自动寻卡；huawei：{BOARD_NAMES['huawei']}；iphone：{BOARD_NAMES['iphone']}")
     parser.add_argument("--reader", choices=("auto", "pn532", "pcr532"), default="auto",
@@ -125,15 +125,19 @@ def parser():
     image_options(prepare)
     descriptions = {"send": "传图刷新 / upload image and refresh",
                     "send-test": "发送色块和棋盘格测试图并刷新 / upload test pattern and refresh",
+                    "send-color": "全屏单色刷新 / upload solid color and refresh",
                     "clear": "清白 / upload white image and refresh"}
     for name, description in descriptions.items():
         sub = commands.add_parser(name, help=description)
         if name == "send":
             sub.add_argument("image", type=Path)
+        elif name == "send-color":
+            sub.add_argument("fill_color", type=str.casefold, choices=tuple(SOLID_COLORS),
+                             help="单色名称；必须是所选屏幕支持的原生颜色")
         screen_options(sub)
         hardware_options(sub)
         upload_options(sub)
-        image_options(sub, processing=name != "send-test")
+        image_options(sub, processing=name not in ("send-test", "send-color"))
         sub.add_argument("--yes", action="store_true", help="跳过手动确认；改写屏幕配置的风险不变")
     refresh = commands.add_parser("refresh", help="\u91cd\u5237 / refresh stored image, no new image or DB/DA writes")
     screen_options(refresh)
@@ -202,15 +206,18 @@ def validate_operation(args, screen):
     screen.require_supported()
     if screen.value.get("requires_e6_wiring_confirmation") and not args.confirm_e6_wiring:
         raise ValueError("Confirm E6 pin16 independent wiring using --confirm-e6-wiring; no display command sent")
-    if args.command in ("send", "send-test", "clear") and args.keep_driver and args.passes not in ("auto", "full"):
+    if args.command in ("send", "send-test", "send-color", "clear") and args.keep_driver and args.passes not in ("auto", "full"):
         raise ValueError("保留已存驱动时不能安装分段配方；分段刷新请显式指定 --screen。")
+    if args.command == "send-color":
+        solid_color(screen, args.fill_color)
 
 
 def prepare(args, screen):
-    options = None if args.command == "send-test" else ImageProcessOptions(
+    options = None if args.command in ("send-test", "send-color") else ImageProcessOptions(
         args.algorithm, args.preset, args.contrast, args.strength, args.heavy_ink).validated()
     image = test_pattern(screen) if args.command == "send-test" else getattr(args, "image", None)
     return prepare_image(screen, image, white=args.command == "clear" or getattr(args, "white", False),
+        fill_color=getattr(args, "fill_color", None),
         rotation=args.rotation, fit=args.fit, scale=args.scale, pan_x=args.pan_x, pan_y=args.pan_y,
         mirror_x=args.mirror_x, mirror_y=args.mirror_y, options=options, native_palette=args.command == "send-test")
 
@@ -250,13 +257,13 @@ def parse_args(argv=None):
     args = parser().parse_args(arguments)
     if hasattr(args, "transport") and args.transport is None:
         args.transport = "d3"
-    if args.command in ("send", "send-test", "clear", "refresh"):
+    if args.command in ("send", "send-test", "send-color", "clear", "refresh"):
         args.keep_driver = args.command == "refresh" or not (args.screen or args.profile_file)
     return args
 
 
 def confirm_operation(args, screen, console):
-    replaces_driver = args.command in ("send", "send-test", "clear") and not args.keep_driver
+    replaces_driver = args.command in ("send", "send-test", "send-color", "clear") and not args.keep_driver
     if not args.yes:
         print("=" * 60, file=sys.stderr)
         print("风险确认" if replaces_driver else "刷新确认", file=sys.stderr)
@@ -360,10 +367,13 @@ def main(argv=None):
             if not confirm_operation(args, screen, console):
                 say("已取消，未连接读写器或写入配置。", level="warning", stage="结果")
                 return 0
-            if args.command in ("send", "send-test", "clear"):
+            if args.command in ("send", "send-test", "send-color", "clear"):
                 planes, preview = prepare(args, screen)
         logger = RunLog(args.log_dir)
         logger.update(operation=args.command, version=__version__)
+        if args.command == "send-color":
+            logger.update(fill_color=args.fill_color)
+            say(f"全屏单色：{args.fill_color}。", stage="准备")
         if screen is not None:
             logger.update(screen=screen.name, screen_label=screen.name,
                           resolution=[screen.value["width"], screen.value["height"]], color=screen.color)
@@ -397,7 +407,7 @@ def main(argv=None):
                 logger.update(screen=screen.name, screen_label=screen.name,
                               resolution=[screen.value["width"], screen.value["height"]], color=screen.color)
                 say(f"保留已存驱动；图像格式：{screen.name}。请勿更换屏幕。", stage="准备")
-                if args.command in ("send", "send-test", "clear"):
+                if args.command in ("send", "send-test", "send-color", "clear"):
                     planes, preview = prepare(args, screen)
             if args.command == "refresh":
                 # Empty planes mark needed slots; no image data is ever sent in this mode.
