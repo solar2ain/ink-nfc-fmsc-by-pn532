@@ -46,10 +46,10 @@ Connect the reader and panel, then secure the board coil over the reader antenna
 
 ```sh
 python -m ink_nfc_fmsc ports
-python -m ink_nfc_fmsc probe --port COM18
+python -m ink_nfc_fmsc probe --port COMxx
 ```
 
-Windows uses `COM18`; macOS commonly uses `/dev/cu.usbserial-...`; Linux uses `/dev/ttyUSB0` or `/dev/ttyACM0`. Use `ports` to find the actual port name. Linux users need serial-port permissions.
+Windows serial ports use `COM` followed by a port number, such as `COM3`. `COMxx` in these commands is a placeholder: replace it with the actual port name reported by `ports`. macOS commonly uses `/dev/cu.usbserial-...`; Linux uses `/dev/ttyUSB0` or `/dev/ttyACM0`. Linux users need serial-port permissions.
 
 ## Selecting a Panel
 
@@ -77,10 +77,10 @@ Color codes are `BW`, `BWR`, `BWRY`, `GRAY4` and `E6`. Changing dimensions alone
 ## Upload, Clear and Refresh
 
 ```sh
-python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COM18
+python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COMxx
 ```
 
 `send` uploads and refreshes; `send-test` generates color blocks and a bottom checkerboard for the selected panel's resolution and colors, then uploads and refreshes without an image file; `clear` uploads a white image and refreshes, not a factory reset; `refresh` uses the stored image without uploading or changing the driver. `send-test` follows the same configuration confirmation, compression and segmented-refresh rules as `send`.
@@ -95,8 +95,8 @@ Commands require manual confirmation by default. Add `--yes` for automation to s
 Without `--screen` or a custom profile, upload and clear preserve the stored driver and never write DB/DA. The attached panel must match the stored configuration. The tool first reads the configuration and stops if the image format is ambiguous; use `--ic`, `--resolution` and `--color` to narrow the candidates. D1 cannot distinguish some equal-size panels or A0/A1, and cannot identify the physical panel.
 
 ```sh
-python -m ink_nfc_fmsc send picture.png --port COM18 --ic SSD1683
-python -m ink_nfc_fmsc clear --port COM18 --ic SSD1683
+python -m ink_nfc_fmsc send picture.png --port COMxx --ic SSD1683
+python -m ink_nfc_fmsc clear --port COMxx --ic SSD1683
 ```
 
 D3 + LZO compression is the default; `--no-compress` selects raw D2 transfer. PN532/PCR532 compatibility is automatic by default.

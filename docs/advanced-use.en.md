@@ -4,6 +4,8 @@
 
 ## Connection and Selection
 
+`COMxx` in the examples is a Windows serial-port placeholder. Replace it with the actual port reported by `python -m ink_nfc_fmsc ports`; use the corresponding device path on macOS or Linux.
+
 `probe` reads board identity and access state without authentication, configuration or upload. `prepare` creates a local preview without opening a serial port.
 
 `--screen` selects a complete recipe. Filters such as `--ic SSD1683 --resolution 400x300 --color bwr` are also supported. Multiple matches require an explicit panel name. Changing dimensions alone cannot adapt a different panel.
@@ -41,7 +43,7 @@ Compression cannot expand storage. Undeclared D3 support stops the operation bef
 ## A0 / A1 Segmented Refresh
 
 ```sh
-python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --board iphone --passes two --port COM18
+python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --board iphone --passes two --port COMxx
 ```
 
 `--passes auto` follows the capacity budget; `full` requires one full frame; `two` uses two halves; `first` and `second` refresh one half. Each half reuses slot 0 with 52992 decoded bytes. A failed first half stops the operation.

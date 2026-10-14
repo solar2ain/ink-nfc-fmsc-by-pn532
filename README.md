@@ -46,10 +46,10 @@ python -m pip install .
 
 ```sh
 python -m ink_nfc_fmsc ports
-python -m ink_nfc_fmsc probe --port COM18
+python -m ink_nfc_fmsc probe --port COMxx
 ```
 
-Windows 使用 `COM18`，macOS 通常使用 `/dev/cu.usbserial-...`，Linux 通常使用 `/dev/ttyUSB0` 或 `/dev/ttyACM0`。实际串口名称以 `ports` 输出为准。Linux 用户需要串口访问权限。
+Windows 串口名称为 `COM` 加端口号，例如 `COM3`。本文命令中的 `COMxx` 是占位符，执行时必须替换为 `ports` 输出的实际串口名称。macOS 通常使用 `/dev/cu.usbserial-...`，Linux 通常使用 `/dev/ttyUSB0` 或 `/dev/ttyACM0`。Linux 用户需要串口访问权限。
 
 ## 选择屏幕
 
@@ -77,10 +77,10 @@ python -m ink_nfc_fmsc screens --ic SSD1683
 ## 传图、清白和重刷
 
 ```sh
-python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COM18
-python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COM18
+python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc send-test --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc clear --screen SSD1683-400x300-BWR --port COMxx
+python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COMxx
 ```
 
 `send` 传图后刷新；`send-test` 根据屏幕分辨率和颜色生成色块与底部棋盘格测试图，传图后刷新，无需图片文件；`clear` 写入全白图片后刷新，不是恢复出厂；`refresh` 仅重刷驱动板已经保存的图片，不传新图片或改写驱动。`send-test` 与 `send` 使用相同的配置确认、压缩传输和分段刷新规则。
@@ -95,8 +95,8 @@ python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COM18
 不指定 `--screen` 或自定义配方时，传图和清白保留已存驱动，不写 DB/DA。实际连接的屏幕必须与板内配置一致。程序先读取配置；若无法唯一确定图像格式，将停止，可用 `--ic`、`--resolution`、`--color` 缩小范围。D1 无法区分某些同尺寸型号及 A0/A1，不能据此自动判断实体屏幕。
 
 ```sh
-python -m ink_nfc_fmsc send picture.png --port COM18 --ic SSD1683
-python -m ink_nfc_fmsc clear --port COM18 --ic SSD1683
+python -m ink_nfc_fmsc send picture.png --port COMxx --ic SSD1683
+python -m ink_nfc_fmsc clear --port COMxx --ic SSD1683
 ```
 
 默认使用 D3 + LZO 压缩传图；添加 `--no-compress` 使用 D2 原始传输。读写器默认自动兼容 PN532/PCR532，无需指定型号。

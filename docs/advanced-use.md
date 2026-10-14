@@ -4,6 +4,8 @@
 
 ## 连接与屏幕选择
 
+示例中的 `COMxx` 是 Windows 串口占位符，请替换为 `python -m ink_nfc_fmsc ports` 输出的实际串口名称；macOS 和 Linux 使用相应的设备路径。
+
 `probe` 只读驱动板身份和访问状态，不认证、不改配置、不传图。`prepare` 仅生成本地预览，不打开串口。
 
 `--screen` 选择完整屏幕配方。也可用 `--ic SSD1683 --resolution 400x300 --color bwr` 筛选；如果匹配多个型号，必须指定 `--screen`。不能只改变分辨率而沿用其他屏幕的驱动。
@@ -41,7 +43,7 @@
 ## A0 / A1 分段刷新
 
 ```sh
-python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --board iphone --passes two --port COM18
+python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --board iphone --passes two --port COMxx
 ```
 
 `--passes auto` 按容量预算选择；`full` 要求整帧，`two` 分两段，`first`、`second` 单独刷新某一段。每段复用图槽 0，原始数据为 52992 bytes；第一段失败时停止后续操作。
