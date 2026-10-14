@@ -10,7 +10,7 @@ It supports Windows, macOS and Linux with Python 3.11 or newer.
 
 ## Limitations
 
-**NFC power delivery may be insufficient for higher-resolution panels to complete a refresh.** Reader hardware, antenna alignment, coil matching, stored energy and panel load all affect the result. Detecting a board or completing an upload does not prove sustained power delivery. Longer waits, compression and segmented refresh do not guarantee a solution.
+**NFC power delivery may be insufficient for higher-resolution panels to complete a refresh.** Reader hardware, antenna alignment, coil matching, stored energy and panel load all affect the result. In most cases, the board can be detected and image transfer completed, but this does not mean power delivery can sustain an e-paper refresh. Longer waits, compression and segmented refresh do not guarantee a solution.
 
 **PN532 power delivery is currently insufficient to drive Huawei A0 and A1 panels reliably; starting a refresh can lead to a low-voltage disconnect.** Some panels using other controllers have been driven successfully, but the model, wiring and power conditions still need checking. The availability of A0/A1 driver recipes does not mean PN532 can complete their refresh. An `RF_TIMEOUT` alone is not proof that the chip lost power.
 
