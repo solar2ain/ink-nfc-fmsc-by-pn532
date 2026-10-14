@@ -23,6 +23,14 @@ def test_compression_capability_failure_explains_explicit_raw_option():
     assert "--no-compress" in failure["advice"] and "自动" in failure["advice"]
 
 
+def test_wtx_deadline_has_an_actionable_timeout_message():
+    from ink_nfc_fmsc.isodep import IsoDepTimeout
+    failure = failure_description(IsoDepTimeout("ISO-DEP WTX would exceed command deadline"))
+    assert failure["code"] == "COMMAND_TIMEOUT"
+    assert "超时" in failure["message"] and "停止" in failure["message"]
+    assert "自动重刷" in failure["advice"]
+
+
 @pytest.mark.parametrize("stage,label", [("full D2 11/120", "传输图片"), ("full D4", "启动屏幕刷新"),
     ("half-1 DE", "等待屏幕刷新"), ("PIN", "检查访问权限"), ("D1 config", "设置或核对屏幕配置")])
 def test_readable_failure_stages(stage, label):

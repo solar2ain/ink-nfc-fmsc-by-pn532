@@ -42,7 +42,7 @@ def screen_options(parser):
     parser.add_argument("--resolution", type=resolution)
     parser.add_argument("--width", type=int)
     parser.add_argument("--height", type=int)
-    parser.add_argument("--color", choices=("bw", "bwr", "bwry", "gray4", "e6"))
+    parser.add_argument("--color", type=str.casefold, choices=("bw", "bwr", "bwry", "gray4", "e6"))
     parser.add_argument("--profile-file", type=Path, help="Explicit custom JSON recipe, validated before use")
 
 
@@ -62,6 +62,7 @@ def hardware_options(parser):
     parser.add_argument("--de-hz", type=float, default=9.0, help="Target polling rate; transport latency may limit actual rate")
     parser.add_argument("--rf-timeout-ms", type=int, default=1000)
     parser.add_argument("--d4-timeout", type=float, default=8.0, help="D4 acknowledgement deadline, not waveform duration")
+    parser.add_argument("--de-timeout", type=float, default=5.0, help="单次 DE 状态查询回包期限，单位秒，范围 2..60")
     parser.add_argument("--timeout", type=float, help="Total refresh observation deadline in seconds")
     parser.add_argument("--log-dir", type=Path, default=Path("logs"))
     parser.add_argument("--verbose", action="store_true", help="显示详细协议信息；一般使用无需开启")
@@ -238,7 +239,7 @@ def serial_settings(args):
         port = ports[0].device
     return Settings(port=port, board=args.board, reader=args.reader, baud=args.baud, precharge_ms=args.precharge_ms,
         packet_delay_ms=args.packet_delay_ms, pre_refresh_ms=args.pre_refresh_ms, first_de_delay_ms=args.first_de_delay_ms,
-        de_hz=args.de_hz, rf_timeout_ms=args.rf_timeout_ms, d4_timeout=args.d4_timeout,
+        de_hz=args.de_hz, rf_timeout_ms=args.rf_timeout_ms, d4_timeout=args.d4_timeout, de_timeout=args.de_timeout,
         expected_uid=args.uid, pin=args.pin, verbose=args.verbose)
 
 

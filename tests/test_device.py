@@ -6,7 +6,7 @@ from ink_nfc_fmsc.catalog import select_screen
 from ink_nfc_fmsc.device import Device, RunLog, Settings
 from ink_nfc_fmsc.images import prepare_image
 from ink_nfc_fmsc.plans import jobs_for
-from ink_nfc_fmsc.pn532 import Activation, RfTransportError, parse_ats
+from ink_nfc_fmsc.pn532 import Activation, Pn532Timeout, RfTransportError, parse_ats
 from ink_nfc_fmsc.protocol import D1, D8, DE, FACTORY_PIN, pin_apdu
 
 
@@ -222,6 +222,60 @@ def test_de_does_not_replay_write_and_default_frequency_is_9hz(tmp_path):
         assert sum(p[1] == 0xD4 for p in dev.session.sent) == 1
 
 
+@pytest.mark.parametrize("query_limit,total_limit,expected", [(5, 150, 5), (3, 150, 3), (5, 4, 4)])
+def test_unanswered_de_has_its_own_deadline_and_stops_without_replay(
+        tmp_path, monkeypatch, query_limit, total_limit, expected):
+    dev, clock = device(tmp_path, de_timeout=query_limit)
+    original = FakeSession.transceive
+    waits = []
+
+    def unanswered(self, apdu, **kwargs):
+        if apdu == DE:
+            self.sent.append(apdu)
+            waits.append(kwargs["timeout_s"])
+            clock.sleep(kwargs["timeout_s"])
+            raise Pn532Timeout("DE response timed out")
+        return original(self, apdu, **kwargs)
+
+    monkeypatch.setattr(FakeSession, "transceive", unanswered)
+    job = replace(plan()[0], minimum_observation=1)
+    with pytest.raises(Pn532Timeout):
+        with dev:
+            dev.run((job,), timeout=total_limit)
+    assert waits == [expected]
+    assert clock.now == expected
+    assert dev.session.sent.count(DE) == 1
+    assert sum(p[1] == 0xD4 for p in dev.session.sent) == 1
+    assert dev.reader.closed
+
+
+def test_de_wtx_wait_reports_progress_before_the_reply(tmp_path, monkeypatch):
+    dev, clock = device(tmp_path)
+    original = FakeSession.transceive
+    lines = []
+    dev.output = lines.append
+
+    def delayed(self, apdu, **kwargs):
+        if apdu == DE:
+            self.sent.append(apdu)
+            for count in range(1, 7):
+                clock.sleep(0.5)
+                kwargs["on_wtx"]({"count": count, "factor": 1, "wait_ms": 1000})
+            raise RfTransportError(2, "RF_CRC_ERROR")
+        return original(self, apdu, **kwargs)
+
+    monkeypatch.setattr(FakeSession, "transceive", delayed)
+    with pytest.raises(RfTransportError):
+        with dev:
+            dev.run(plan())
+    progress = [line for line in lines if "WTX=" in line]
+    assert len(progress) == 3
+    assert "DE" in progress[0] and "0.5" in progress[0]
+    assert "2.5" in progress[-1]
+    assert not any("DE=00" in line or "刷新结束" in line for line in lines)
+    assert dev.session.sent.count(DE) == 1
+
+
 def test_d4_started_byte_does_not_replace_independent_busy_for_half(tmp_path):
     dev, _ = device(tmp_path, board="iphone")
     with dev:
@@ -325,7 +379,8 @@ def test_iphone_6985_does_not_try_factory_pin(tmp_path):
 
 
 @pytest.mark.parametrize("option", [dict(de_hz=0), dict(de_hz=float("nan")), dict(de_hz=100), dict(rf_timeout_ms=1),
-                                  dict(packet_delay_ms=-1), dict(board="iphone", pin=FACTORY_PIN)])
+                                  dict(packet_delay_ms=-1), dict(board="iphone", pin=FACTORY_PIN),
+                                  dict(de_timeout=0), dict(de_timeout=float("nan")), dict(de_timeout=61)])
 def test_invalid_timing_and_authentication_options(option):
     with pytest.raises(ValueError):
         Settings(port="SIM", **option)

@@ -21,6 +21,28 @@ def test_help_labels_send_clear_and_keeps_refresh():
     assert "send-test" in help_text
 
 
+@pytest.mark.parametrize("color", ["BW", "BwR", "BWRY", "GrAy4", "E6"])
+def test_color_values_are_case_insensitive(color):
+    args = parse_args(["send-test", "--ic", "jd79668aa", "--resolution", "400X300", "--color", color])
+    assert args.color == color.casefold()
+    assert args.resolution == (400, 300)
+    assert args.keep_driver
+
+
+def test_combined_screen_filters_accept_mixed_case(capsys):
+    assert main(["screens", "--ic", "jD79668aA", "--resolution", "400X300", "--color", "BwRy", "--json"]) == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert [row["id"] for row in rows] == ["JD79668AA-400x300-BWRY"]
+
+
+@pytest.mark.parametrize("flags,expected", [([], 5), (["--de-timeout", "3"], 3)])
+def test_de_query_deadline_is_independent_of_total_refresh_deadline(flags, expected):
+    from ink_nfc_fmsc.cli import serial_settings
+    args = parse_args(["refresh", "--port", "SIM", "--timeout", "150", *flags])
+    assert serial_settings(args).de_timeout == expected
+    assert args.timeout == 150
+
+
 @pytest.mark.parametrize("alias,board,passes", [("SSD1683-400x300-BWR", "huawei", 1), ("huawei-a1", "iphone", 2)])
 def test_send_test_generates_preview_and_uses_normal_upload(tmp_path, alias, board, passes):
     from PIL import Image

@@ -68,6 +68,7 @@ class Settings:
     de_hz: float = 9.0
     rf_timeout_ms: int = 1000
     d4_timeout: float = 8.0
+    de_timeout: float = 5.0
     expected_uid: bytes | None = None
     pin: bytes | None = None
     verbose: bool = False
@@ -86,6 +87,8 @@ class Settings:
             raise ValueError("DE target frequency must be 0.1..20 Hz")
         if not 2 <= self.d4_timeout <= 60 or not 1 <= self.baud <= 921600:
             raise ValueError("Invalid D4 timeout or baud rate")
+        if not 2 <= self.de_timeout <= 60:
+            raise ValueError("DE response timeout must be within 2..60 s")
         if self.expected_uid is not None and len(self.expected_uid) not in (4, 7, 10):
             raise ValueError("Expected UID must be 4, 7 or 10 bytes")
         if self.pin is not None and len(self.pin) != 5:
@@ -144,7 +147,7 @@ class Device:
                 "fields": {f"{tag:02X}": data.hex().upper() for tag, data in self.fields.items()}})
             label = BOARD_NAMES[self.board]
             self.log.update(board=self.board, board_name=label, uid=self.activation.uid.hex().upper(), port=self.settings.port,
-                            reader_policy=self.settings.reader, de_hz=self.settings.de_hz)
+                            reader_policy=self.settings.reader, de_hz=self.settings.de_hz, de_timeout=self.settings.de_timeout)
             self.report(f"已连接 {label}，UID {hex_bytes(self.activation.uid)}（D1=9000）。", level="success")
             if self.settings.verbose:
                 self.report(f"APPID {hex_bytes(appid)}; wake={self.activation.wake_command:02X} / 7-bit; INF<={limit}")
@@ -166,13 +169,13 @@ class Device:
         while (remaining := until - self.clock()) > 0:
             self.sleep(min(0.1, remaining))
 
-    def exchange(self, name, apdu, *, timeout=5.0, require_ok=True, quiet=False, secret=False):
+    def exchange(self, name, apdu, *, timeout=5.0, require_ok=True, quiet=False, secret=False, on_wtx=None):
         started = self.clock()
         self.log.summary["last_stage"] = name
         try:
             raw = self.session.transceive(apdu, timeout_s=timeout,
                     minimum_wait_ms=self.settings.rf_timeout_ms,
-                    max_wtx=max(256, int(timeout * 100) + 1))
+                    max_wtx=max(256, int(timeout * 100) + 1), on_wtx=on_wtx)
             result = reply(raw)
         except Exception as exc:
             self.log.event("apdu_error", {"stage": name, "tx": "[PIN REDACTED]" if secret else apdu.hex().upper(),
@@ -285,12 +288,22 @@ class Device:
         seen_busy = False
         idle_samples = 0
         last_state, last_output = None, -float("inf")
+
+        def waiting(details):
+            nonlocal last_output
+            now = self.clock()
+            if now - last_output >= 1:
+                self.report(f"驱动板请求延时，等待 DE 回包，已用 {now - started:.1f} 秒"
+                            f"（WTX={details['count']}，单次查询上限 {self.settings.de_timeout:g} 秒）...")
+                last_output = now
+
         while self.clock() < deadline:
             poll_started = self.clock()
             remaining = deadline - poll_started
             if remaining < 2:
                 break
-            state = self.exchange(f"{job.name} DE", DE, timeout=remaining, quiet=True)
+            state = self.exchange(f"{job.name} DE", DE,
+                                  timeout=min(self.settings.de_timeout, remaining), quiet=True, on_wtx=waiting)
             if state.data not in (b"\x00", b"\x01"):
                 raise ValueError("DE has no valid BUSY byte")
             busy = state.data == b"\x01"

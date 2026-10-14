@@ -27,6 +27,34 @@ def activation(fwt_ms=309.3):
 
 
 class IsoDepTests(unittest.TestCase):
+    def test_repeated_wtx_reports_progress_without_extending_command_deadline(self):
+        from unittest.mock import patch
+        from ink_nfc_fmsc.isodep import IsoDepTimeout
+        fake = FakePn532([b"\xf2\x01"] * 100)
+        now = [0.0]
+        original = fake.communicate_thru
+
+        def delayed(*args, **kwargs):
+            now[0] += 0.5
+            return original(*args, **kwargs)
+
+        fake.communicate_thru = delayed
+        session = IsoDepSession(fake, activation(77.3))
+        progress = []
+        with patch("ink_nfc_fmsc.isodep.time.monotonic", side_effect=lambda: now[0]):
+            with self.assertRaisesRegex(IsoDepTimeout, "deadline"):
+                session.transceive(bytes.fromhex("F0DE000001"), timeout_s=5,
+                                   max_wtx=500, minimum_wait_ms=1000, on_wtx=progress.append)
+        self.assertLessEqual(now[0], 5)
+        self.assertGreater(len(progress), 1)
+        self.assertEqual(progress[0]["count"], 1)
+        self.assertEqual(progress[0]["factor"], 1)
+        self.assertEqual(fake.events[0][0], "iso_wtx")
+        self.assertNotIn("tx", fake.events[0][1])
+        self.assertEqual(fake.sent[0], bytes.fromhex("02F0DE000001"))
+        self.assertTrue(all(frame == b"\xf2\x01" for frame in fake.sent[1:]))
+        self.assertFalse(session.active)
+
     def test_opt_in_frame_pacing_preserves_blocks_waits_and_wtx_multiplier(self):
         from unittest.mock import patch
         fake = FakePn532([b"\xf2\x01", b"\x02\x90\x00"])

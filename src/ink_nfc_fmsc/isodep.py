@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import Callable
 
 from .pn532 import Activation, Pn532, Pn532Error, RfTransportError, hex_bytes
+
+
+class IsoDepTimeout(Pn532Error):
+    pass
 
 
 @dataclass(frozen=True)
@@ -75,6 +80,7 @@ class IsoDepSession:
         recover_responses: int = 0,
         retry_de_timeouts: int = 0,
         frame_gap_ms: float = 0.0,
+        on_wtx: Callable[[dict], None] | None = None,
     ) -> bytes:
         if not self.active:
             raise Pn532Error("ISO-DEP session is no longer active")
@@ -115,16 +121,19 @@ class IsoDepSession:
         # transport guard above the caller's WTX allowance so it does not
         # terminate an otherwise healthy exchange first.
         max_exchanges = max(128, max_wtx + 32)
-        deadline = time.monotonic() + timeout_s
+        started = time.monotonic()
+        deadline = started + timeout_s
         try:
             while True:
                 exchanges += 1
                 if frame_gap_ms:
                     time.sleep(frame_gap_ms / 1000)
-                if exchanges > max_exchanges or time.monotonic() >= deadline:
-                    raise Pn532Error("ISO-DEP exchange deadline/count limit exceeded")
+                if exchanges > max_exchanges:
+                    raise Pn532Error("ISO-DEP exchange count limit exceeded")
+                if time.monotonic() >= deadline:
+                    raise IsoDepTimeout("ISO-DEP exchange deadline exceeded")
                 if time.monotonic() + wait_ms / 1000.0 > deadline:
-                    raise Pn532Error("ISO-DEP wait would exceed command deadline")
+                    raise IsoDepTimeout("ISO-DEP wait would exceed command deadline")
                 remaining_ms = max(100.0, (deadline - time.monotonic()) * 1000.0)
                 self._last_wire_tx = tx
                 try:
@@ -176,8 +185,15 @@ class IsoDepSession:
                         self.activation.ats.fwt_ms * block.factor * 1.10 + 20.0,
                         minimum_wait_ms,
                     )
+                    now = time.monotonic()
+                    details = {"count": wtx_count, "factor": block.factor, "wait_ms": requested,
+                               "elapsed_seconds": round(now - started, 3),
+                               "remaining_seconds": round(max(0, deadline - now), 3)}
+                    self.pn532.log("iso_wtx", details)
+                    if on_wtx is not None:
+                        on_wtx(details)
                     if time.monotonic() + requested / 1000.0 > deadline:
-                        raise Pn532Error("ISO-DEP WTX would exceed command deadline")
+                        raise IsoDepTimeout("ISO-DEP WTX would exceed command deadline")
                     tx = block.raw
                     wait_ms = requested
                     continue

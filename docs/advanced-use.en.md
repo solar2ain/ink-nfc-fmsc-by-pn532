@@ -29,7 +29,10 @@ Check the local `prepare` preview before uploading.
 | `--de-hz` | 9 | Target query frequency, limited by transport latency |
 | `--rf-timeout-ms` | 1000 | RF exchange waiting time |
 | `--d4-timeout` | 8 | Refresh-command response deadline in seconds, not waveform duration |
+| `--de-timeout` | 5 | Per-query DE response deadline in seconds, 2..60, including WTX waits |
 | `--timeout` | Panel-specific | Refresh observation limit in seconds |
+
+A DE deadline or transport error stops the operation without replaying D4. WTX requests are logged and show waiting progress; they do not reset the query deadline.
 
 D3 + LZO compression is the default. `--no-compress` is equivalent to `--transport d2`; do not combine them. `--transport auto` uses the recipe's path. `--compression literal` is still D3, not raw D2.
 

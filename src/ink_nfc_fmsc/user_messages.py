@@ -3,6 +3,7 @@ import re
 
 import serial
 
+from .isodep import IsoDepTimeout
 from .pn532 import Pn532Timeout, RfTransportError, STATUS_NAMES
 from .protocol import STATUS
 
@@ -19,6 +20,10 @@ def failure_description(error):
         code = "READER_TIMEOUT"
         message = "读写器响应超时，操作已停止。"
         advice = "检查 USB 连接和线圈位置；不要同时运行其他占用串口的程序。"
+    elif isinstance(error, IsoDepTimeout):
+        code = "COMMAND_TIMEOUT"
+        message = "驱动板指令回包超时，操作已停止。"
+        advice = "检查屏幕是否有变化和线圈是否稳定；延时请求不能延长指令期限，本次不会自动重刷。"
     elif isinstance(error, serial.SerialException):
         code = "PORT_UNAVAILABLE"
         message = "无法打开读写器串口。"
