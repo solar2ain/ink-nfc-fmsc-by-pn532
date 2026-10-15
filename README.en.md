@@ -34,6 +34,12 @@ From left to right: a Huawei Nova 14 Pro e-paper case driver board, followed by 
 
 These results apply to the reader, boards, coils and panels tested, not every model of the same size or resolution. Larger panels have not refreshed reliably. Panel area, colors, waveforms and power conditions also affect the result.
 
+### Refresh Demo
+
+Huawei driver board refreshing an Osptek 1.54-inch E6 e-paper display.
+
+https://github.com/user-attachments/assets/fd2017f3-80f8-404b-bc5e-848eb191e1c7
+
 ## Installation and Connection
 
 ```sh
