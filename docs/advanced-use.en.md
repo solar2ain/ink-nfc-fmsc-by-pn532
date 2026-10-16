@@ -8,7 +8,7 @@
 
 `probe` reads board identity and access state without authentication, configuration or upload. `prepare` creates a local preview without opening a serial port.
 
-`--screen` selects a complete recipe. Filters such as `--ic SSD1683 --resolution 400x300 --color bwr` are also supported. Multiple matches require an explicit panel name. Changing dimensions alone cannot adapt a different panel.
+`--screen` selects and installs a complete recipe by default. Add `--use-stored-driver` to select only the image format without writing DA/DB; refresh then uses the current stored driver. Filters such as `--ic SSD1683 --resolution 400x300 --color bwr` are also supported. Multiple matches require an explicit panel name. Changing dimensions alone cannot adapt a different panel.
 
 `--board auto` tries `26`, `52`, `7A`, `7D` and validates board information. `--board huawei` restricts activation to Huawei Nova boards; `--board iphone` remains a compatibility parameter for standard-wake FMSC boards.
 
@@ -54,7 +54,7 @@ Default conservative budgets are 80000 bytes for standard-wake boards and 200000
 
 ## Configuration and Safety
 
-Omitting `--screen` and a custom profile preserves the stored driver without DB/DA writes. The stored configuration must match the physical panel. Ambiguous image formats stop execution; narrow candidates using controller, resolution and color filters. `--data-format linear` only compares an existing A0 layout; it cannot identify A0/A1. `native` uses the native row mapping. Preserved drivers cannot be combined with segmented configuration.
+Omitting `--screen` and a custom profile preserves the stored driver without DB/DA writes. Alternatively, specify `--screen huawei-a1 --use-stored-driver` to choose an image format without replacing the driver. The stored configuration must match the physical panel. Ambiguous image formats stop execution; narrow candidates using controller, resolution and color filters. `--data-format linear` only compares an existing A0 layout; it cannot identify A0/A1. `native` uses the native row mapping. Preserved drivers cannot be combined with segmented configuration, and this mode cannot restore an overwritten factory driver.
 
 `--uid` locks the board identity. `--pin` supplies a known Huawei PIN without guessing or repeated attempts. `--profile-file` imports a complete advanced recipe whose panel and wiring must be verified by the user.
 

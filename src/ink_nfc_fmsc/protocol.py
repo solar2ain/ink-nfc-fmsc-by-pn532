@@ -74,6 +74,17 @@ def board_info(raw, uid):
     return fields
 
 
+def stored_scan_compatible(fields, geometry, scan):
+    if fields.get(0xA1) == scan:
+        return True
+    # Recorded factory A0 and A1 boards use vertical mode 00 with these bytes.
+    # This recognizes metadata, not the attached panel or its stored SPI flow.
+    return (fields.get(0xC0) in (bytes.fromhex("00000001"), bytes.fromhex("201EA001"))
+            and fields.get(0xA0) == geometry == bytes.fromhex("F0C72006000228")
+            and scan == bytes.fromhex("01120030FFFFFF")
+            and fields.get(0xA1) == bytes.fromhex("00120030FFFFFF"))
+
+
 def pin_apdu(pin):
     if len(pin) != 5:
         raise ValueError("Known FMSC PIN must contain exactly 5 bytes")

@@ -12,10 +12,10 @@ It supports Windows, macOS and Linux with Python 3.11 or newer.
 
 **NFC power delivery may be insufficient for higher-resolution panels to complete a refresh.** Reader hardware, antenna alignment, coil matching, stored energy and panel load all affect the result. In most cases, the board can be detected and image transfer completed, but this does not mean power delivery can sustain an e-paper refresh. Longer waits, compression and segmented refresh do not guarantee a solution.
 
-**Earlier PN532 tests with small coils repeatedly lost communication after starting an A0/A1 refresh and did not complete reliably.** A PCR532 has now completed an A1 refresh using a Nova 15 Pro/Ultra case and its original larger coil hidden in the camera frame. This does not establish compatibility with PN532 or other coil combinations. An `RF_TIMEOUT` alone is not proof that the chip lost power.
+**Earlier PN532 tests with small coils repeatedly lost communication after starting an A0/A1 refresh and did not complete reliably.** A PCR532 has now completed an A1 refresh using a Nova 15 Pro/Ultra case, its original larger camera-frame coil and the stored factory driver. After replacing that driver with this tool's A1 recipe, the board returned `68CA` and did not complete a refresh. This does not validate the custom A1 recipe or establish compatibility with PN532 or other coils. An `RF_TIMEOUT` alone is not proof that the chip lost power.
 
 > [!CAUTION]
-> **Changing panels and writing the corresponding driver configuration overwrites the board's factory panel settings and refresh sequence. This tool cannot restore them, and the factory information may be unrecoverable.** Selecting `--screen` or a custom profile for upload or clear writes the selected configuration. Proceed only if you accept this risk.
+> **Changing panels and writing the corresponding driver configuration overwrites the board's factory panel settings and refresh sequence. This tool cannot restore them, and the factory information may be unrecoverable.** Selecting `--screen` or a custom profile for upload or clear writes that configuration unless `--use-stored-driver` is added. Proceed only if you accept this risk.
 
 Decoded image storage is also limited. Compression does not increase this capacity. A0/A1 segmented refresh is experimental and does not guarantee that the other half remains unchanged. Panels cannot be identified automatically: verify the controller, resolution, colors and wiring. A catalog entry does not guarantee every reader/board/panel combination.
 
@@ -26,18 +26,18 @@ Using a **PCR532** reader, the following driver board and tested panel combinati
 | Driver board | Tested working panel range |
 |---|---|
 | Huawei Nova e-paper phone-case NFC driver board | Tested panels at resolutions up to 400×300 |
-| Original Huawei Nova 15 Pro/Ultra case board and camera-frame coil | Original A1 552×768 four-color panel; refresh completed with the stored factory driver |
+| Original Huawei Nova 15 Pro/Ultra case board and camera-frame coil | Original A1 552×768 four-color panel; only the stored factory driver succeeded, while this tool's A1 recipe returned `68CA` |
 | FMSC e-paper NFC driver board (iPhone e-paper case) | Tested panels up to 2.13 inches |
 
 ![E-paper case driver boards: Huawei Nova 14 Pro on the left, and two iPhone e-paper case driver boards in the center and on the right](assets/hardware/driver-boards-annotated.png)
 
 From left to right: a Huawei Nova 14 Pro e-paper case driver board, followed by two iPhone e-paper case driver boards.
 
-These results apply to the reader, boards, coils and panels tested, not every model of the same size or resolution. The successful Nova 15 Pro/Ultra setup uses a larger coil than the earlier small-coil setups, so it does not isolate differences between factory and custom drivers. Panel area, colors, waveforms and power conditions also affect the result.
+These results apply to the reader, boards, coils and panels tested, not every model of the same size or resolution. The Nova 15 Pro/Ultra factory driver and this tool's A1 recipe behave differently; the cause remains under investigation. This success does not validate the tool's A1 recipe. Panel area, colors, waveforms and power conditions also affect the result.
 
 ### Refresh Demo
 
-PCR532 refreshing a Huawei Nova 15 Pro/Ultra e-paper case (A1, 552×768, four colors). The original coil is hidden in the camera frame, and this test preserves the stored factory driver.
+PCR532 refreshing a Huawei Nova 15 Pro/Ultra e-paper case (A1, 552×768, four colors). The coil is hidden in the camera frame. **The successful refresh in this video uses the stored factory driver, not this tool's A1 recipe; the latter returned `68CA` in this setup.**
 
 [![PCR532 refreshing a Huawei Nova 15 Pro/Ultra A1 case with the complete four-color test pattern](assets/demos/nova15-pro-ultra-a1-pcr532.jpg)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
@@ -111,8 +111,23 @@ python -m ink_nfc_fmsc refresh --screen SSD1683-400x300-BWR --port COMxx
 
 Test patterns use a landscape layout by default, including portrait panel models. The pattern is automatically rotated into the native pixel format without changing the resolution in the driver configuration.
 
+### Using the Stored Factory Driver
+
+Starting with 0.1.20, `--use-stored-driver` lets you select the image format explicitly while preserving the driver currently stored on the board. These A1 commands do not write DA/DB: D3 uploads the image and D4 runs the stored sequence. Status polling defaults to 9 Hz:
+
+```sh
+python -m ink_nfc_fmsc send-test --screen huawei-a1 --use-stored-driver --port COMxx
+python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --use-stored-driver --port COMxx
+python -m ink_nfc_fmsc clear --screen huawei-a1 --use-stored-driver --port COMxx
+```
+
+In this mode, `--screen` selects only resolution, colors and pixel encoding, without installing that panel's driver recipe. Stored configuration compatibility is still checked. For A0, substitute `huawei-a0`; this is not a claim of tested success. Reader compatibility with PN532/PCR532 is automatic by default.
+
+> [!IMPORTANT]
+> **This option preserves the current driver; it neither restores a factory driver nor verifies that the stored driver is original.** The factory workflow requires a board whose driver has not been overwritten. If DA/DB was previously replaced, this option still uses the replacement. Stored-driver mode cannot be combined with segmented refresh; insufficient image capacity stops the operation without automatically rewriting configuration.
+
 > [!CAUTION]
-> Selecting `--screen` (or a custom profile) for upload or clear overwrites the board's factory panel configuration. This tool cannot restore the factory driver. A risk confirmation is shown before execution; verify the panel model and wiring.
+> Selecting `--screen` (or a custom profile) for upload or clear without `--use-stored-driver` overwrites the board's factory panel configuration. This tool cannot restore the factory driver. A risk confirmation is shown before execution; verify the panel model and wiring.
 
 Commands require manual confirmation by default. Add `--yes` for automation to skip the prompt; it does not reduce the risk and is not a PIN or compression setting.
 

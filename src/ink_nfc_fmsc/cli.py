@@ -15,7 +15,7 @@ from .device import BOARD_NAMES, Device, RunLog, Settings
 from .image_processing import IMAGE_ALGORITHMS, PROCESSING_PRESETS, ImageProcessOptions
 from .images import SOLID_COLORS, prepare_image, solid_color, test_pattern
 from .plans import jobs_for
-from .protocol import D8
+from .protocol import D8, stored_scan_compatible
 from .user_messages import failure_description, stage_label
 
 
@@ -135,12 +135,16 @@ def parser():
             sub.add_argument("fill_color", type=str.casefold, choices=tuple(SOLID_COLORS),
                              help="单色名称；必须是所选屏幕支持的原生颜色")
         screen_options(sub)
+        sub.add_argument("--use-stored-driver", action="store_true",
+                         help="使用板内已存驱动，不写 DA/DB；--screen 仅选择图像格式，仍检查配置是否匹配")
         hardware_options(sub)
         upload_options(sub)
         image_options(sub, processing=name not in ("send-test", "send-color"))
-        sub.add_argument("--yes", action="store_true", help="跳过手动确认；改写屏幕配置的风险不变")
+        sub.add_argument("--yes", action="store_true", help="跳过手动确认；不改变驱动写入策略")
     refresh = commands.add_parser("refresh", help="\u91cd\u5237 / refresh stored image, no new image or DB/DA writes")
     screen_options(refresh)
+    refresh.add_argument("--use-stored-driver", action="store_true",
+                         help="本命令始终保留板内驱动，不写 DA/DB")
     hardware_options(refresh)
     refresh.add_argument("--confirm-e6-wiring", action="store_true")
     refresh.add_argument("--yes", action="store_true", help="跳过手动确认，直接重刷已存图片")
@@ -162,7 +166,7 @@ def native_screen(args, screen=None):
         if screen.id != "huawei_a0_jd79665":
             raise ValueError("--data-format linear only applies to Huawei A0")
         if args.command != "prepare" and not args.keep_driver:
-            raise ValueError("--data-format linear 仅用于保留已存驱动；请省略 --screen，并用 --ic / --resolution 筛选。")
+            raise ValueError("--data-format linear 仅用于保留已存驱动；请添加 --use-stored-driver，或省略 --screen。")
         screen = replace(screen, value={**screen.value, "row_mapping": "linear"})
     return screen
 
@@ -186,18 +190,14 @@ def stored_screen(args, fields):
             continue
         geometry = bytes.fromhex(screen.value["expected_d1_a0"])
         scan = bytes.fromhex(screen.value["expected_d1_a1"])
-        factory_vertical = (fields.get(0xC0) == bytes.fromhex("00000001")
-                            and geometry == bytes.fromhex("F0C72006000228")
-                            and scan == bytes.fromhex("01120030FFFFFF")
-                            and fields.get(0xA1) == bytes.fromhex("00120030FFFFFF"))
         half = (args.command == "refresh" and screen.id in asset_json("two-pass.json")
                 and fields.get(0xA0) == bytes.fromhex("F0C72003000228"))
-        if (fields.get(0xA0) == geometry or half) and (fields.get(0xA1) == scan or factory_vertical):
+        if (fields.get(0xA0) == geometry or half) and stored_scan_compatible(fields, geometry, scan):
             candidates.append(screen)
     if len(candidates) != 1:
         names = ", ".join(s.name for s in candidates)
         raise ValueError("已存配置无法唯一确定图像格式，未写入配置或刷新。"
-                         "请用 --ic、--resolution、--color 筛选（仍保留已存驱动）；"
+                         "请用 --screen 配合 --use-stored-driver 明确图像格式，或用 --ic、--resolution、--color 筛选；"
                          "需要更换驱动时再指定 --screen。" + (f"候选：{names}" if names else "没有匹配型号。"))
     return candidates[0]
 
@@ -207,7 +207,7 @@ def validate_operation(args, screen):
     if screen.value.get("requires_e6_wiring_confirmation") and not args.confirm_e6_wiring:
         raise ValueError("Confirm E6 pin16 independent wiring using --confirm-e6-wiring; no display command sent")
     if args.command in ("send", "send-test", "send-color", "clear") and args.keep_driver and args.passes not in ("auto", "full"):
-        raise ValueError("保留已存驱动时不能安装分段配方；分段刷新请显式指定 --screen。")
+        raise ValueError("使用板内驱动仅支持整帧传图；分段刷新需要改写驱动，不能与 --use-stored-driver 同用。")
     if args.command == "send-color":
         solid_color(screen, args.fill_color)
 
@@ -258,7 +258,8 @@ def parse_args(argv=None):
     if hasattr(args, "transport") and args.transport is None:
         args.transport = "d3"
     if args.command in ("send", "send-test", "send-color", "clear", "refresh"):
-        args.keep_driver = args.command == "refresh" or not (args.screen or args.profile_file)
+        args.keep_driver = (args.command == "refresh" or args.use_stored_driver
+                            or not (args.screen or args.profile_file))
     return args
 
 
@@ -370,14 +371,15 @@ def main(argv=None):
             if args.command in ("send", "send-test", "send-color", "clear"):
                 planes, preview = prepare(args, screen)
         logger = RunLog(args.log_dir)
-        logger.update(operation=args.command, version=__version__)
+        logger.update(operation=args.command, version=__version__,
+                      use_stored_driver=getattr(args, "keep_driver", False))
         if args.command == "send-color":
             logger.update(fill_color=args.fill_color)
             say(f"全屏单色：{args.fill_color}。", stage="准备")
         if screen is not None:
             logger.update(screen=screen.name, screen_label=screen.name,
                           resolution=[screen.value["width"], screen.value["height"]], color=screen.color)
-            banner = f"屏幕：{screen.name}"
+            banner = f"{'图像格式' if args.keep_driver else '屏幕'}：{screen.name}"
             say(banner, stage="准备")
         with Device(settings, logger, output=(lambda _line: None) if getattr(args, "json", False) else console) as device:
             if args.command == "probe":
@@ -424,8 +426,13 @@ def main(argv=None):
                 device.run((job,), keep_driver=True, upload=False, timeout=args.timeout)
             else:
                 capacity = args.capacity if args.capacity is not None else device.capacity
+                if args.keep_driver and sum(map(len, planes)) > capacity:
+                    raise ValueError("整帧图像超过驱动板容量预算；压缩不能扩大存储容量。"
+                                     "使用板内驱动不能自动分段，未传图或改写 DA/DB。")
                 jobs = jobs_for(screen, planes, capacity=capacity, passes="full" if args.keep_driver else args.passes,
                                 transport=args.transport, compression=args.compression)
+                if args.keep_driver:
+                    jobs = tuple(replace(job, config=()) for job in jobs)
                 save_plan(logger.details, screen, jobs, preview, planes, preview_path=logger.directory / "preview.png")
                 if len(jobs) > 1 or jobs[0].half is not None:
                     message = "图片将分段刷新。请保持线圈位置不动，结束后确认两段画面是否完整。"

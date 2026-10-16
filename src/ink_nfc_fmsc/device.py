@@ -11,7 +11,7 @@ from pathlib import Path
 from .console import format_message
 from .isodep import IsoDepSession
 from .pn532 import Pn532, hex_bytes
-from .protocol import D1, D8, DE, FACTORY_PIN, board_info, pin_apdu, reply
+from .protocol import D1, D8, DE, FACTORY_PIN, board_info, pin_apdu, reply, stored_scan_compatible
 
 BOARD_NAMES = {
     "huawei": "华为Nova墨水屏手机壳NFC驱动板",
@@ -211,14 +211,25 @@ class Device:
         fields = board_info(result.data + b"\x90\x00", self.activation.uid)
         same = fields[0xA0] == job.geometry and fields[0xA1] == job.scan
         if keep_driver:
-            # Recorded Huawei A0 factory vertical mode is 00, our row-major mode01.
-            factory_vertical = (self.fields[0xC0] == bytes.fromhex("00000001")
-                and job.geometry == bytes.fromhex("F0C72006000228")
-                and job.scan == bytes.fromhex("01120030FFFFFF")
-                and fields[0xA1] == bytes.fromhex("00120030FFFFFF"))
-            same = fields[0xA0] == job.geometry and (fields[0xA1] == job.scan or factory_vertical)
+            same = fields[0xA0] == job.geometry and stored_scan_compatible(fields, job.geometry, job.scan)
+        self.log.event("configuration_check", {
+            "keep_driver": keep_driver, "geometry": fields[0xA0].hex().upper(),
+            "expected_geometry": job.geometry.hex().upper(), "scan": fields[0xA1].hex().upper(),
+            "expected_scan": job.scan.hex().upper(), "compatible": same,
+            "appid": fields[0xC0].hex().upper(), "expected_appid": self.fields[0xC0].hex().upper(),
+            "slots": fields[0xB1][0], "required_slots": len(job.planes)})
         if not same or fields[0xC0] != self.fields[0xC0] or fields[0xB1][0] < len(job.planes):
+            self.report(f"D1 核对失败：几何字段 A0={fields[0xA0].hex().upper()}"
+                        f"（期望 {job.geometry.hex().upper()}）；扫描字段 A1={fields[0xA1].hex().upper()}"
+                        f"（期望 {job.scan.hex().upper()}）；APPID={fields[0xC0].hex().upper()}"
+                        f"（期望 {self.fields[0xC0].hex().upper()}）；图槽 {fields[0xB1][0]}/{len(job.planes)}。",
+                        level="error")
             raise ValueError("D1 UID/configuration/slots mismatch; no image or D4 sent")
+        if keep_driver and fields[0xA1] != job.scan:
+            self.report("保留原厂扫描模式 00（纵向），所选格式的参考模式为 01（横向）；"
+                        "不写 DA/DB，图像排列仍需实测确认。", level="warning")
+            self.log.update(factory_scan_preserved=True, stored_scan=fields[0xA1].hex().upper(),
+                            selected_scan=job.scan.hex().upper())
         self.fields = fields
 
     def run(self, jobs, *, keep_driver=False, upload=True, timeout=None, capacity=None):

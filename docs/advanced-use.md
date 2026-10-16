@@ -8,7 +8,7 @@
 
 `probe` 只读驱动板身份和访问状态，不认证、不改配置、不传图。`prepare` 仅生成本地预览，不打开串口。
 
-`--screen` 选择完整屏幕配方。也可用 `--ic SSD1683 --resolution 400x300 --color bwr` 筛选；如果匹配多个型号，必须指定 `--screen`。不能只改变分辨率而沿用其他屏幕的驱动。
+`--screen` 默认选择并安装完整屏幕配方；同时添加 `--use-stored-driver` 时，仅选择图像格式，不写 DA/DB，刷新使用板内当前驱动。也可用 `--ic SSD1683 --resolution 400x300 --color bwr` 筛选；如果匹配多个型号，必须指定 `--screen`。不能只改变分辨率而沿用其他屏幕的驱动。
 
 默认 `--board auto` 依次尝试 `26`、`52`、`7A`、`7D`，再核对驱动板信息。华为Nova墨水屏手机壳NFC驱动板可用 `--board huawei` 限定；标准唤醒 FMSC 驱动板保留 `--board iphone` 兼容参数。
 
@@ -54,7 +54,7 @@ python -m ink_nfc_fmsc send picture.png --screen huawei-a1 --board iphone --pass
 
 ## 配置与安全
 
-不指定 `--screen` 或自定义配方时保留已存驱动，不写 DB/DA。现有配置和实际屏幕必须一致；配置不能唯一对应图像格式时程序停止，可用主控、分辨率和颜色参数筛选。`--data-format linear` 仅适用于保留已有 A0 驱动时的布局对照，不能用来识别 A0/A1；默认 `native` 使用原生行映射。保留驱动不能与分段配置混用。
+不指定 `--screen` 或自定义配方时保留已存驱动，不写 DB/DA；也可显式指定 `--screen huawei-a1 --use-stored-driver`，避免将图像格式选择误作驱动改写。现有配置和实际屏幕必须一致；配置不能唯一对应图像格式时程序停止，可用主控、分辨率和颜色参数筛选。`--data-format linear` 仅适用于保留已有 A0 驱动时的布局对照，不能用来识别 A0/A1；默认 `native` 使用原生行映射。保留驱动不能与分段配置混用，也不会恢复已被覆盖的原厂驱动。
 
 `--uid` 可锁定驱动板。`--pin` 仅提供自己已知的华为 PIN，不猜测或连续重试。`--profile-file` 导入完整配方属于进阶操作，使用者需确认配方和接线。
 
