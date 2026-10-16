@@ -39,9 +39,9 @@
 
 PCR532 刷新华为 Nova 15 Pro/Ultra 墨水屏手机壳（A1，552×768 四色）。线圈藏在摄像头边框内。**视频中的成功刷新使用板内原厂驱动，不是本工具写入的 A1 配方；后者在当前组合中返回 `68CA`。**
 
-[![PCR532 刷新华为 Nova 15 Pro/Ultra A1 手机壳，完整显示四色测试图](assets/demos/nova15-pro-ultra-a1-pcr532.jpg)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
+[![PCR532 刷新华为 Nova 15 Pro/Ultra A1 手机壳，完整显示四色测试图](assets/demos/nova15-pro-ultra-a1-pcr532.webp)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
-[查看横向演示视频](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
+[下载完整横向视频（MP4，约 2.3 MB）](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
 使用华为驱动板刷新 Osptek 1.54 英寸 E6 墨水屏。
 

@@ -39,9 +39,9 @@ These results apply to the reader, boards, coils and panels tested, not every mo
 
 PCR532 refreshing a Huawei Nova 15 Pro/Ultra e-paper case (A1, 552×768, four colors). The coil is hidden in the camera frame. **The successful refresh in this video uses the stored factory driver, not this tool's A1 recipe; the latter returned `68CA` in this setup.**
 
-[![PCR532 refreshing a Huawei Nova 15 Pro/Ultra A1 case with the complete four-color test pattern](assets/demos/nova15-pro-ultra-a1-pcr532.jpg)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
+[![PCR532 refreshing a Huawei Nova 15 Pro/Ultra A1 case with the complete four-color test pattern](assets/demos/nova15-pro-ultra-a1-pcr532.webp)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
-[View the landscape demo video](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
+[Download the full landscape video (MP4, about 2.3 MB)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
 Huawei driver board refreshing an Osptek 1.54-inch E6 e-paper display.
 
