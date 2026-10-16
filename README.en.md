@@ -12,7 +12,7 @@ It supports Windows, macOS and Linux with Python 3.11 or newer.
 
 **NFC power delivery may be insufficient for higher-resolution panels to complete a refresh.** Reader hardware, antenna alignment, coil matching, stored energy and panel load all affect the result. In most cases, the board can be detected and image transfer completed, but this does not mean power delivery can sustain an e-paper refresh. Longer waits, compression and segmented refresh do not guarantee a solution.
 
-**PN532 power delivery is currently insufficient to drive Huawei A0 and A1 panels reliably; starting a refresh can lead to a low-voltage disconnect.** Some panels using other controllers have been driven successfully, but the model, wiring and power conditions still need checking. The availability of A0/A1 driver recipes does not mean PN532 can complete their refresh. An `RF_TIMEOUT` alone is not proof that the chip lost power.
+**Earlier PN532 tests with small coils repeatedly lost communication after starting an A0/A1 refresh and did not complete reliably.** A PCR532 has now completed an A1 refresh using a Nova 15 Pro/Ultra case and its original larger coil hidden in the camera frame. This does not establish compatibility with PN532 or other coil combinations. An `RF_TIMEOUT` alone is not proof that the chip lost power.
 
 > [!CAUTION]
 > **Changing panels and writing the corresponding driver configuration overwrites the board's factory panel settings and refresh sequence. This tool cannot restore them, and the factory information may be unrecoverable.** Selecting `--screen` or a custom profile for upload or clear writes the selected configuration. Proceed only if you accept this risk.
@@ -26,15 +26,22 @@ Using a **PCR532** reader, the following driver board and tested panel combinati
 | Driver board | Tested working panel range |
 |---|---|
 | Huawei Nova e-paper phone-case NFC driver board | Tested panels at resolutions up to 400×300 |
+| Original Huawei Nova 15 Pro/Ultra case board and camera-frame coil | Original A1 552×768 four-color panel; refresh completed with the stored factory driver |
 | FMSC e-paper NFC driver board (iPhone e-paper case) | Tested panels up to 2.13 inches |
 
 ![E-paper case driver boards: Huawei Nova 14 Pro on the left, and two iPhone e-paper case driver boards in the center and on the right](assets/hardware/driver-boards-annotated.png)
 
 From left to right: a Huawei Nova 14 Pro e-paper case driver board, followed by two iPhone e-paper case driver boards.
 
-These results apply to the reader, boards, coils and panels tested, not every model of the same size or resolution. Larger panels have not refreshed reliably. Panel area, colors, waveforms and power conditions also affect the result.
+These results apply to the reader, boards, coils and panels tested, not every model of the same size or resolution. The successful Nova 15 Pro/Ultra setup uses a larger coil than the earlier small-coil setups, so it does not isolate differences between factory and custom drivers. Panel area, colors, waveforms and power conditions also affect the result.
 
 ### Refresh Demo
+
+PCR532 refreshing a Huawei Nova 15 Pro/Ultra e-paper case (A1, 552×768, four colors). The original coil is hidden in the camera frame, and this test preserves the stored factory driver.
+
+[![PCR532 refreshing a Huawei Nova 15 Pro/Ultra A1 case with the complete four-color test pattern](assets/demos/nova15-pro-ultra-a1-pcr532.jpg)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
+
+[View the landscape demo video](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/blob/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
 Huawei driver board refreshing an Osptek 1.54-inch E6 e-paper display.
 
