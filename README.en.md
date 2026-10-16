@@ -43,6 +43,15 @@ PCR532 refreshing a Huawei Nova 15 Pro/Ultra e-paper case (A1, 552×768, four co
 
 [Download the full landscape video (MP4, about 2.3 MB)](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
+To reproduce the stored factory-driver workflow shown above, replace `COMxx` with the actual serial port:
+
+```sh
+python -m ink_nfc_fmsc send-test --screen huawei-a1 --use-stored-driver --port COMxx
+```
+
+> [!CAUTION]
+> **The full option `--use-stored-driver` is required. Do not omit it.** Without it, the command overwrites the factory DA/DB configuration, which cannot be restored. The current custom A1 recipe returned `68CA` in testing. This option only preserves the current stored driver; it cannot restore an overwritten factory driver.
+
 Huawei driver board refreshing an Osptek 1.54-inch E6 e-paper display.
 
 https://github.com/user-attachments/assets/fd2017f3-80f8-404b-bc5e-848eb191e1c7

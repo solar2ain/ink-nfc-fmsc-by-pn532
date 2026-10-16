@@ -43,6 +43,15 @@ PCR532 刷新华为 Nova 15 Pro/Ultra 墨水屏手机壳（A1，552×768 四色�
 
 [下载完整横向视频（MP4，约 2.3 MB）](https://github.com/solar2ain/ink-nfc-fmsc-by-pn532/raw/refs/heads/main/assets/demos/nova15-pro-ultra-a1-pcr532.mp4)
 
+复现视频中的原厂驱动刷新方式（将 `COMxx` 替换为实际串口）：
+
+```sh
+python -m ink_nfc_fmsc send-test --screen huawei-a1 --use-stored-driver --port COMxx
+```
+
+> [!CAUTION]
+> **必须带上完整参数 `--use-stored-driver`，不要省略。** 不带此参数会覆盖原厂 DA/DB 配置，无法恢复；当前自定义 A1 配方实测返回 `68CA`。此参数仅保留板内当前驱动，不能恢复已被覆盖的原厂驱动。
+
 使用华为驱动板刷新 Osptek 1.54 英寸 E6 墨水屏。
 
 https://github.com/user-attachments/assets/fd2017f3-80f8-404b-bc5e-848eb191e1c7
