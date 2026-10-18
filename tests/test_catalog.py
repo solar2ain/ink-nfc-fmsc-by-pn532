@@ -8,10 +8,10 @@ from ink_nfc_fmsc.catalog import ALIASES, SCREEN_BASELINES, Screen, asset_json, 
 
 def test_all_recipes_are_valid_and_sorted():
     catalog = screens()
-    assert len(catalog) == 50
-    assert sum(s.supported for s in catalog) == 45
-    assert len({s.id for s in catalog}) == 50
-    assert len(source_recipes()) == 67 and sum(s.supported for s in source_recipes()) == 61
+    assert len(catalog) == 51
+    assert sum(s.supported for s in catalog) == 46
+    assert len({s.id for s in catalog}) == 51
+    assert len(source_recipes()) == 68 and sum(s.supported for s in source_recipes()) == 62
     assert all(select_screen(alias).name == name for alias, name in ALIASES.items())
     assert all(select_screen(alias.upper()).name == name for alias, name in ALIASES.items())
 
@@ -30,6 +30,7 @@ def test_aliases_only_contain_reviewed_public_names():
     assert ALIASES == {
         "huawei-a0": "JD79665AA-552x768-BWRY-A0",
         "huawei-a1": "JD79665AA-552x768-BWRY-A1",
+        "huawei-a1.1": "JD79665AA-552x768-BWRY-A1.1",
         "osptek-e6-154": "IST7513-240x240-E6",
         "osptek-e6-169": "IST7601-400x400-E6",
         "osptek-e6-370": "JD7601-IST7601-480x720-E6",
@@ -39,6 +40,7 @@ def test_aliases_only_contain_reviewed_public_names():
 @pytest.mark.parametrize("alias,name", [
     ("huawei-a0", "JD79665AA-552x768-BWRY-A0"),
     ("huawei-a1", "JD79665AA-552x768-BWRY-A1"),
+    ("huawei-a1.1", "JD79665AA-552x768-BWRY-A1.1"),
     ("osptek-e6-154", "IST7513-240x240-E6"),
     ("osptek-e6-169", "IST7601-400x400-E6"),
     ("osptek-e6-370", "JD7601-IST7601-480x720-E6"),
@@ -53,7 +55,7 @@ def test_public_names_are_unique_case_insensitive_and_preserve_exact_recipe(scre
         selected = select_screen(name)
         assert selected.id == screen.id and selected.value == screen.value
     assert "reference" not in screen.name.lower()
-    assert len({s.name.casefold() for s in screens()}) == 50
+    assert len({s.name.casefold() for s in screens()}) == 51
 
 
 @pytest.mark.parametrize("name,ident", [
@@ -87,7 +89,7 @@ def test_duplicate_public_name_blocks_ambiguous_catalog(monkeypatch):
 
 
 def test_ambiguous_selection_reports_public_names_not_developer_ids():
-    with pytest.raises(ValueError, match="matched 2") as error:
+    with pytest.raises(ValueError, match="matched 3") as error:
         select_screen(ic="JD79665AA", width=552, height=768, color="bwry")
     assert "JD79665AA-552x768-BWRY-A0" in str(error.value)
     assert "A1" in str(error.value) and "reference" not in str(error.value).lower()
@@ -117,7 +119,7 @@ def test_only_huawei_has_variants_and_reviewed_baselines_stay_intact():
     original = {s.id: s for s in source_recipes()}
     for screen in screens():
         suffix = screen.name.removeprefix(f"{screen.controller_name}-{screen.value['width']}x{screen.value['height']}-{screen.color.upper()}")
-        assert not suffix or suffix in ("-A0", "-A1") and screen.id.startswith("huawei_")
+        assert not suffix or suffix in ("-A0", "-A1", "-A1.1") and screen.id.startswith("huawei_")
         assert screen.value == original[screen.id].value
     for name, ids in SCREEN_BASELINES.items():
         assert select_screen(name).id == ids[0]

@@ -2,6 +2,8 @@
 
 [中文](README.md) | [English](README.en.md)
 
+[版本说明](RELEASE_NOTES.md)
+
 ## 项目介绍
 
 本工具支持**墨有引力华为Nova彩显手机壳NFC驱动板**，以及其他采用兼容协议的 **FMSC 无源墨水屏 NFC 驱动板**（如 iPhone 等墨水屏手机壳）。通过 PN532 或 PCR532 串口读写器，可选择屏幕驱动、处理图片，并进行传图刷新、清白和重刷。
@@ -80,15 +82,16 @@ python -m ink_nfc_fmsc screens
 python -m ink_nfc_fmsc screens --ic SSD1683
 ```
 
-屏幕统一命名为 **主控-分辨率-颜色**，大小写不敏感。仅华为 A0/A1 使用变体后缀。列表包含屏幕、别名和状态三列；没有别名时留空，暂不可用的屏幕不列出。
+屏幕统一命名为 **主控-分辨率-颜色**，大小写不敏感。华为 A0/A1/A1.1 使用变体后缀。列表包含屏幕、别名和状态三列；没有别名时留空，暂不可用的屏幕不列出。
 
-别名仅保留 `huawei-a0`、`huawei-a1`、`osptek-e6-154`、`osptek-e6-169`、`osptek-e6-370`；其他屏幕请使用完整规范名称。
+别名仅保留 `huawei-a0`、`huawei-a1`、`huawei-a1.1`、`osptek-e6-154`、`osptek-e6-169`、`osptek-e6-370`；其他屏幕请使用完整规范名称。
 
 | 屏幕 | 型号参数 |
 |---|---|
 | SSD1683 黑白红 | `SSD1683-400x300-BWR` |
 | 华为 A0 | `JD79665AA-552x768-BWRY-A0`，别名 `huawei-a0` |
 | 华为 A1 | `JD79665AA-552x768-BWRY-A1`，别名 `huawei-a1` |
+| 华为 A1.1 | `JD79665AA-552x768-BWRY-A1.1`，别名 `huawei-a1.1` |
 | SSD1675 黑白 | `SSD1675-152x152-BW` |
 | SSD1619 黑白红 | `SSD1619-128x250-BWR` |
 | JD79668AA 四色 | `JD79668AA-400x300-BWRY` |
@@ -97,6 +100,19 @@ python -m ink_nfc_fmsc screens --ic SSD1683
 颜色代码为 `BW`（黑白）、`BWR`（黑白红）、`BWRY`（黑白黄红）、`GRAY4`（四级灰度）、`E6`（六色）。不能仅修改分辨率来适配未知屏幕。
 
 ## 传图、清白和重刷
+
+### 华为 A1.1
+
+使用 `--screen huawei-a1.1`。图片按物理屏幕 552×768 处理，自动转换为 768×600 的控制器布局并补齐 48 行白色；整帧占用 115200 字节，无需手动调整图片尺寸。A1 与 A1.1 必须分别选择，不能自动识别。
+
+```sh
+python -m ink_nfc_fmsc send-test --screen huawei-a1.1 --port COMxx
+python -m ink_nfc_fmsc clear --screen huawei-a1.1 --port COMxx
+```
+
+该布局已用于消除中央残留条带，但不保证所有供电和屏幕组合均能完成刷新。本版本不提供实验性的功耗调节参数。A1.1 仅支持整帧，驱动板容量不足时停止，不套用 A0/A1 的分段方案。`--use-stored-driver` 要求板内已有配置匹配 600 行布局；原有 552 行配置不能直接用于该图像格式。指定屏幕安装驱动仍会覆盖原厂配置，请先阅读使用限制。
+
+### 常用命令
 
 ```sh
 python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx

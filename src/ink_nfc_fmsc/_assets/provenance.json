@@ -21,7 +21,7 @@
     }
   ],
   "bundled": {
-    "drivers.json": "1083fd401079417c9c4ac818ec1119c9bedf797cdaf9806bd3c80544ff3cd012",
+    "drivers.json": "ba60936c78860761a46bd8fc0d0361bb445374dc896ebb9882d3c197e2f4961e",
     "epdoptimize.cjs": "38d820218fb368123e999db353811587b2efe64c5450df564f5cd73d8297f44d",
     "EPDOPTIMIZE_LICENSE.txt": "10c41f434da491e8ef9dace5f9187bb71c03fb7061acd0de85aeffc318dd21e7",
     "legacyDithering.js": "fefcbd8ba5d725726cbdac337585d9e6016e2047be03dfa40a139b12b807b034",

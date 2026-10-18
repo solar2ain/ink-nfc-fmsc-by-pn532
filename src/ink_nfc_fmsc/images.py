@@ -69,6 +69,9 @@ def pack_indices(indices, screen):
                 target = row * 2 if row < 276 else 1103 - row * 2
                 mapped[target * 192:(target + 1) * 192] = raw[row * 192:(row + 1) * 192]
             raw = bytes(mapped)
+        native_width, native_height = screen.controller_resolution
+        # A1.1 retains the physical portrait image; extra controller Gate rows are white.
+        raw += b"\x55" * ((native_height - width) * (native_width // 4))
         return (raw,)
     if p.get("reverse_rows"):
         indices = b"".join(indices[y * width:(y + 1) * width] for y in range(height - 1, -1, -1))

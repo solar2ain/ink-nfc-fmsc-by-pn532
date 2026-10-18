@@ -46,6 +46,8 @@ def jobs_for(screen: Screen, planes, *, capacity=200000, passes="auto", transpor
     if transport not in ("auto", "d2", "d3"):
         raise ValueError("Unknown transport")
     mode = "two" if passes == "auto" and sum(map(len, planes)) > capacity else "full" if passes == "auto" else passes
+    if screen.id == "huawei_a11_jd79665" and mode != "full":
+        raise ValueError("A1.1 requires a 115200-byte full frame; no reviewed two-pass recipe is available")
     if mode == "full":
         if sum(map(len, planes)) > capacity:
             raise ValueError("Frame exceeds capacity budget; compression reduces UART traffic, NOT stored image bytes")

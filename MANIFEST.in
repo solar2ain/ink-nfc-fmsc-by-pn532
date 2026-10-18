@@ -1,4 +1,5 @@
 include .gitattributes README.en.md
+include RELEASE_NOTES.md RELEASE_NOTES.en.md
 include LICENSE
 exclude AGENTS.md
 recursive-include docs *.md

@@ -11,7 +11,7 @@ def test_installed_resources_are_self_contained_and_match_manifest():
     manifest = asset_json("provenance.json")
     for name, expected in manifest["bundled"].items():
         assert hashlib.sha256(assets.joinpath(name).read_bytes()).hexdigest() == expected
-    assert len(screens()) == 50 and len(source_recipes()) == 67
+    assert len(screens()) == 51 and len(source_recipes()) == 68
     assert select_screen("huawei-a1").value["controller"] == "JD79665AA"
     assert select_screen("jd79665aa-552X768-bwry-a1").name == "JD79665AA-552x768-BWRY-A1"
 

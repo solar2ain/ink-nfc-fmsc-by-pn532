@@ -379,6 +379,8 @@ def main(argv=None):
         if screen is not None:
             logger.update(screen=screen.name, screen_label=screen.name,
                           resolution=[screen.value["width"], screen.value["height"]], color=screen.color)
+            if screen.id == "huawei_a11_jd79665":
+                logger.update(controller_resolution=[768, 600], padding_bytes=9216)
             banner = f"{'图像格式' if args.keep_driver else '屏幕'}：{screen.name}"
             say(banner, stage="准备")
         with Device(settings, logger, output=(lambda _line: None) if getattr(args, "json", False) else console) as device:

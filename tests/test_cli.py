@@ -198,15 +198,16 @@ def test_screen_table_has_headers_aliases_and_blank_cells(capsys):
     assert [title.strip() for title in lines[0].split("|")] == ["屏幕", "别名", "状态"]
     rows = {cells[0].strip(): [cell.strip() for cell in cells[1:]]
             for line in lines[2:-1] if len(cells := line.split("|")) == 3}
-    assert len(rows) == 45
+    assert len(rows) == 46
     assert rows["SSD1680-128x250-BW"] == ["", "可用"]
     assert rows["SSD1683-400x300-BWR"] == ["", "可用"]
     assert rows["JD79665AA-552x768-BWRY-A0"] == ["huawei-a0", "可用"]
     assert rows["JD79665AA-552x768-BWRY-A1"] == ["huawei-a1", "可用"]
+    assert rows["JD79665AA-552x768-BWRY-A1.1"] == ["huawei-a1.1", "可用"]
     assert rows["IST7513-240x240-E6"][0] == "osptek-e6-154"
     assert rows["IST7601-400x400-E6"][0] == "osptek-e6-169"
     assert rows["JD7601-IST7601-480x720-E6"][0] == "osptek-e6-370"
-    public_aliases = {"huawei-a0", "huawei-a1", "osptek-e6-154", "osptek-e6-169", "osptek-e6-370"}
+    public_aliases = {"huawei-a0", "huawei-a1", "huawei-a1.1", "osptek-e6-154", "osptek-e6-169", "osptek-e6-370"}
     assert {alias for aliases, _ in rows.values() for alias in aliases.split(", ") if alias} == public_aliases
     assert all(status == "可用" for _, status in rows.values())
     for name, (aliases, _) in rows.items():
@@ -227,7 +228,7 @@ def test_json_catalog_includes_aliases_and_empty_lists(capsys, flags):
     assert rows["SSD1683-400x300-BW"]["aliases"] == []
     assert rows["JD79668AA-400x300-BWRY"]["aliases"] == []
     assert {alias for row in rows.values() for alias in row["aliases"]} == {
-        "huawei-a0", "huawei-a1", "osptek-e6-154", "osptek-e6-169", "osptek-e6-370"}
+        "huawei-a0", "huawei-a1", "huawei-a1.1", "osptek-e6-154", "osptek-e6-169", "osptek-e6-370"}
 
 
 @pytest.mark.parametrize("flags", [[], ["--json"], ["--json", "--details"]])
@@ -239,13 +240,13 @@ def test_screen_lists_hide_unsupported_recipes_in_every_output_format(capsys, fl
         assert main(["screens", *flags]) == 0
         hardware.assert_not_called()
     output = capsys.readouterr().out
-    assert len(allowed) == 45 and "暂不可用" not in output
+    assert len(allowed) == 46 and "暂不可用" not in output
     assert not any(name in output for name in hidden)
     if "--json" in flags:
         rows = json.loads(output)
         assert {row["id"] for row in rows} == allowed and all(row["supported"] for row in rows)
     else:
-        assert all(name in output for name in allowed) and "共 45 个型号" in output
+        assert all(name in output for name in allowed) and "共 46 个型号" in output
 
 
 def test_unsupported_screen_filters_are_empty_and_explicit_selection_keeps_reason(capsys):

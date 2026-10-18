@@ -10,6 +10,7 @@ COLORS = {2: "bw", 3: "bwr", 4: "bwry", 6: "e6"}
 ALIASES = {
     "huawei-a0": "JD79665AA-552x768-BWRY-A0",
     "huawei-a1": "JD79665AA-552x768-BWRY-A1",
+    "huawei-a1.1": "JD79665AA-552x768-BWRY-A1.1",
     "osptek-e6-154": "IST7513-240x240-E6", "osptek-e6-169": "IST7601-400x400-E6",
     "osptek-e6-370": "JD7601-IST7601-480x720-E6",
 }
@@ -18,6 +19,7 @@ ALIASES = {
 NAME_CONTROLLERS = {"uc8151_213_bwr": "UC8151"}
 NAME_VARIANTS = {
     "huawei_a0_jd79665": "A0", "huawei_a1_jd79665": "A1",
+    "huawei_a11_jd79665": "A1.1",
 }
 
 # One reviewed baseline per glass/controller format. First ID is selected; the rest
@@ -86,7 +88,13 @@ class Screen:
         expected_planes = 2 if packing in ("bwr", "bwr_inverted", "gray4_planes", "e6_planes") else 1
         stride = ((width + 3) // 4 if packing in ("huawei_2bpp", "indexed_2bpp", "e6_planes") else
                   (width + 1) // 2 if packing in ("indexed_4bpp", "uc8159_4bpp") else (width + 7) // 8)
-        if planes != expected_planes or p["plane_bytes"] != stride * height or p["raw_bytes"] != stride * height * planes:
+        plane_bytes = stride * height
+        if "controller_width" in p or "controller_height" in p:
+            if (packing != "huawei_2bpp" or "controller_width" not in p or "controller_height" not in p
+                    or self.controller_resolution not in ((768, 552), (768, 600))):
+                raise ValueError("Unreviewed controller padding/layout")
+            plane_bytes = self.controller_resolution[0] // 4 * self.controller_resolution[1]
+        if planes != expected_planes or p["plane_bytes"] != plane_bytes or p["raw_bytes"] != plane_bytes * planes:
             raise ValueError("Pixel packing / raw size mismatch")
         if not 0 <= p.get("invert_planes", 0) < (1 << planes):
             raise ValueError("Invalid plane inversion mask")
@@ -108,6 +116,8 @@ class Screen:
         mapping = p.get("row_mapping", "linear")
         if mapping != "linear" and not (packing == "huawei_2bpp" and mapping == "a0_interleaved"):
             raise ValueError("Unknown native row mapping")
+        if packing == "huawei_2bpp" and self.controller_resolution[1] == 600 and mapping != "linear":
+            raise ValueError("Padded Huawei layout requires linear controller rows")
         if packing == "indexed_4bpp" and (colors != 6 or width % 2 or p["family"] != "IST"
                 or p.get("pixel_codes") != [0, 1, 2, 3, 5, 6]
                 or not p.get("requires_e6_wiring_confirmation")):
@@ -132,9 +142,15 @@ class Screen:
         if tags[0][0] != 0xA0 or len(tags[0][1]) != 6:
             raise ValueError("DB must begin with geometry")
         geometry = tags[0][1]
-        expected_x = height * 2 if packing == "huawei_2bpp" else width * 4 if packing == "indexed_4bpp" else width * 2 if packing == "indexed_2bpp" else width
-        if int.from_bytes(geometry[2:4], "big") != expected_x or int.from_bytes(geometry[4:6], "big") != (width if packing == "huawei_2bpp" else height):
+        expected_x = self.controller_resolution[0] * 2 if packing == "huawei_2bpp" else width * 4 if packing == "indexed_4bpp" else width * 2 if packing == "indexed_2bpp" else width
+        expected_y = self.controller_resolution[1] if packing == "huawei_2bpp" else height
+        if int.from_bytes(geometry[2:4], "big") != expected_x or int.from_bytes(geometry[4:6], "big") != expected_y:
             raise ValueError("DB geometry is inconsistent; changing only image dimensions is unsafe")
+        if packing == "huawei_2bpp" and self.controller_resolution[1] == 600:
+            windows = [v for t, v in tags if t in (0xA1, 0xA2) and v[0] == 0x83]
+            if ((0xA1, bytes.fromhex("6103000258")) not in tags
+                    or windows != [bytes.fromhex("83000002FF0000025700")] * 3):
+                raise ValueError("Padded Huawei TRES/window contract mismatch")
         if bytes.fromhex(p["expected_d1_a0"]) != b"\xf0" + geometry or bytes.fromhex(p["da_apdu"]) != b"\xf0\xda\x00\x00\x03\xf0" + geometry[:2]:
             raise ValueError("DB/DA/D1 geometry mismatch")
         scan = bytes.fromhex(p["da_scan_apdu"])
@@ -203,6 +219,13 @@ class Screen:
     def visible(self):
         p = self.value
         return p.get("visible_x", 0), p.get("visible_y", 0), p.get("visible_width", p["width"]), p.get("visible_height", p["height"])
+
+    @property
+    def controller_resolution(self):
+        p = self.value
+        if p["packing"] == "huawei_2bpp":
+            return p.get("controller_width", p["height"]), p.get("controller_height", p["width"])
+        return p["width"], p["height"]
 
     def require_supported(self):
         if not self.supported:

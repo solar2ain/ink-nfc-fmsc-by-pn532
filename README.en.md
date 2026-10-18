@@ -2,6 +2,8 @@
 
 [中文](README.md) | [English](README.en.md)
 
+[Release Notes](RELEASE_NOTES.en.md)
+
 ## Overview
 
 This tool supports **Mo You Yin Li Huawei Nova color-display phone-case NFC driver boards**, as well as other **FMSC passive e-paper NFC driver boards using a compatible protocol**, including those found in iPhone e-paper cases. PN532 or PCR532 UART readers can select panel drivers, process images, upload and refresh, clear to white, and refresh stored images.
@@ -80,15 +82,16 @@ python -m ink_nfc_fmsc screens
 python -m ink_nfc_fmsc screens --ic SSD1683
 ```
 
-Names use **CONTROLLER-WIDTHxHEIGHT-COLOR**, case-insensitively. Only Huawei A0/A1 have variant suffixes. The table includes panel, aliases and status; empty aliases remain blank, and unavailable panels are omitted.
+Names use **CONTROLLER-WIDTHxHEIGHT-COLOR**, case-insensitively. Huawei A0/A1/A1.1 have variant suffixes. The table includes panel, aliases and status; empty aliases remain blank, and unavailable panels are omitted.
 
-Only `huawei-a0`, `huawei-a1`, `osptek-e6-154`, `osptek-e6-169` and `osptek-e6-370` are retained as aliases. Use the full canonical name for other panels.
+Only `huawei-a0`, `huawei-a1`, `huawei-a1.1`, `osptek-e6-154`, `osptek-e6-169` and `osptek-e6-370` are retained as aliases. Use the full canonical name for other panels.
 
 | Panel | Selection |
 |---|---|
 | SSD1683 black/white/red | `SSD1683-400x300-BWR` |
 | Huawei A0 | `JD79665AA-552x768-BWRY-A0`, alias `huawei-a0` |
 | Huawei A1 | `JD79665AA-552x768-BWRY-A1`, alias `huawei-a1` |
+| Huawei A1.1 | `JD79665AA-552x768-BWRY-A1.1`, alias `huawei-a1.1` |
 | SSD1675 black/white | `SSD1675-152x152-BW` |
 | SSD1619 black/white/red | `SSD1619-128x250-BWR` |
 | JD79668AA four-color | `JD79668AA-400x300-BWRY` |
@@ -97,6 +100,19 @@ Only `huawei-a0`, `huawei-a1`, `osptek-e6-154`, `osptek-e6-169` and `osptek-e6-3
 Color codes are `BW`, `BWR`, `BWRY`, `GRAY4` and `E6`. Changing dimensions alone does not adapt an unknown panel.
 
 ## Upload, Clear and Refresh
+
+### Huawei A1.1
+
+Select `--screen huawei-a1.1`. Images use the physical 552x768 panel size and are converted automatically to a 768x600 controller frame with 48 additional white rows. A full frame occupies 115200 bytes; no manual image resizing is needed. A1 and A1.1 are separate selections and cannot be detected automatically.
+
+```sh
+python -m ink_nfc_fmsc send-test --screen huawei-a1.1 --port COMxx
+python -m ink_nfc_fmsc clear --screen huawei-a1.1 --port COMxx
+```
+
+This layout has been used to remove the central residual stripe, but complete refresh is not guaranteed across power and panel combinations. This release does not provide experimental power-tuning options. A1.1 supports full frames only: insufficient board capacity stops the operation instead of reusing A0/A1 split recipes. `--use-stored-driver` requires an existing matching 600-row configuration; a 552-row configuration is not compatible with this image format. Installing the selected driver still overwrites factory settings; read the usage limitations first.
+
+### Common Commands
 
 ```sh
 python -m ink_nfc_fmsc send assets/examples/mountain-journey-400x300.png --screen SSD1683-400x300-BWR --port COMxx
